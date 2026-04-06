@@ -1,8 +1,10 @@
-/** Row shapes aligned with `migrations/0001_init.sql`. */
+/** Row shapes aligned with `migrations/` (see `0002_workspace_links.sql`). */
 
 export type WebhookEndpointRow = {
   id: string;
   created_at: number;
+  public_slug: string;
+  secret_token: string;
 };
 
 export type WebhookRequestRow = {
@@ -13,7 +15,7 @@ export type WebhookRequestRow = {
   headers: string;
   body: string | null;
   created_at: number;
-  /** Optional human-readable origin (UI); may map to a DB column later. */
+  /** Optional human-readable origin (UI); not stored in D1. */
   source_note?: string;
 };
 

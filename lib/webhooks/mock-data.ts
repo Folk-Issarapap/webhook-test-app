@@ -5,8 +5,8 @@ import type { WebhookRequestRow } from "@/schemas/webhook";
 export const MOCK_PUBLIC_BASE_URL = "https://hooks.example.test";
 
 /**
- * Builds sample request rows for each catcher in the workspace until D1/API is wired.
- * Uses the endpoint’s slug and token in paths so the UI matches copyable URLs.
+ * Sample rows for demos/tests (Inspect uses D1 when running on Workers).
+ * Uses the endpoint’s slug and token in paths so URLs match the real ingest path.
  */
 export function buildMockRequestsForEndpoint(ep: {
   id: string;

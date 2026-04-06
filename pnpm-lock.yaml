@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   vinext@0.0.39:
-    hash: pfr3zxepmy5vd2kjgf7tt6d7g4
+    hash: 13c8a75c16a9f3c8f0c13fd5aed2c8c7986b0b01a778097ce2d239eb0c43a4f2
     path: patches/vinext@0.0.39.patch
 
 importers:
@@ -78,7 +78,7 @@ importers:
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       vinext:
         specifier: ^0.0.39
-        version: 0.0.39(patch_hash=pfr3zxepmy5vd2kjgf7tt6d7g4)(@vitejs/plugin-react@6.0.1(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(@vitejs/plugin-rsc@0.5.21(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(next@16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(typescript@5.9.3)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1))
+        version: 0.0.39(patch_hash=13c8a75c16a9f3c8f0c13fd5aed2c8c7986b0b01a778097ce2d239eb0c43a4f2)(@vitejs/plugin-react@6.0.1(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(@vitejs/plugin-rsc@0.5.21(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(next@16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(typescript@5.9.3)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1))
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.31.0
@@ -9569,7 +9569,7 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vinext@0.0.39(patch_hash=pfr3zxepmy5vd2kjgf7tt6d7g4)(@vitejs/plugin-react@6.0.1(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(@vitejs/plugin-rsc@0.5.21(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(next@16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(typescript@5.9.3)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)):
+  vinext@0.0.39(patch_hash=13c8a75c16a9f3c8f0c13fd5aed2c8c7986b0b01a778097ce2d239eb0c43a4f2)(@vitejs/plugin-react@6.0.1(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(@vitejs/plugin-rsc@0.5.21(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)))(next@16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.105.4(esbuild@0.27.3)))(react@19.2.4)(typescript@5.9.3)(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@20.19.39)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.46.1)):
     dependencies:
       '@unpic/react': 1.0.2(next@16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@vercel/og': 0.8.6

@@ -19,5 +19,10 @@
       "database_name": "webhook-test-db",
       "database_id": "a8ae335d-78ed-44ac-92d2-6e9c8c3c14a1"
     }
-  ]
+  ],
+  "env": {
+    "preview": {
+      "name": "webhook-test-app-preview"
+    }
+  }
 }

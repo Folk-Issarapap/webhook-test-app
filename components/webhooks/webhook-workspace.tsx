@@ -2,9 +2,16 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import {
+  attachEndpointByTokensAction,
+  bootstrapWorkspaceAction,
+  createEndpointAction,
+  removeEndpointAction,
+  type WorkspaceEndpointDto,
+} from "@/actions/webhooks/workspace-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,17 +21,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { buildMockRequestsForEndpoint } from "@/lib/webhooks/mock-data";
-import {
-  addEndpoint,
-  ensureWorkspaceInitialized,
-  loadWorkspaceState,
-  MAX_ENDPOINTS,
-  removeEndpoint,
-  selectEndpoint,
-  type WorkspaceState,
-  upsertEndpointByTokens,
-} from "@/lib/webhooks/workspace-state";
+import { MAX_ENDPOINTS_PER_WORKSPACE } from "@/lib/webhooks/constants";
 import { isValidWorkspacePair } from "@/lib/webhooks/workspace-storage";
 import { buildIngestUrl, buildWorkspaceAppPath } from "@/lib/webhooks/urls";
 import type { WebhookRequestRow } from "@/schemas/webhook";
@@ -123,53 +120,121 @@ type WebhookWorkspaceProps = {
   origin: string;
 };
 
-export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [ready, setReady] = useState(false);
-  const [state, setState] = useState<WorkspaceState>({
-    endpoints: [],
-    selectedId: null,
-  });
-
-  const refresh = useCallback(() => {
-    setState(loadWorkspaceState());
-  }, []);
+function EndpointRequestList({ endpointId }: { endpointId: string }) {
+  const [requests, setRequests] = useState<WebhookRequestRow[]>([]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      ensureWorkspaceInitialized();
-      setState(loadWorkspaceState());
-      setReady(true);
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(
+          `/api/workspace-endpoints/${encodeURIComponent(endpointId)}/requests`,
+          { credentials: "same-origin" },
+        );
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          ok?: boolean;
+          requests?: WebhookRequestRow[];
+        };
+        if (cancelled || !data.requests) return;
+        setRequests(data.requests);
+      } catch {
+        /* ignore network errors during poll */
+      }
+    };
+    void tick();
+    const interval = setInterval(tick, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [endpointId]);
+
+  if (requests.length === 0) {
+    return (
+      <div className="border-border text-muted-foreground rounded-xl border border-dashed py-16 text-center text-sm">
+        No requests yet for this webhook URL.
+      </div>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col gap-3">
+      {requests.map((row) => (
+        <li key={row.id}>
+          <RequestCard row={row} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+  const [endpoints, setEndpoints] = useState<WorkspaceEndpointDto[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    const r = await bootstrapWorkspaceAction();
+    if (!r.success) {
+      setLoadError(r.message);
+      return;
+    }
+    setLoadError(null);
+    setEndpoints(r.endpoints);
+    setSelectedId((prev) => {
+      if (prev && r.endpoints.some((e) => e.id === prev)) return prev;
+      return r.endpoints[0]?.id ?? null;
     });
   }, []);
 
+  /** Bootstrap once on mount; deep link from `window.location.search`. */
   useEffect(() => {
-    if (!ready) return;
-    const slug = searchParams.get("slug");
-    const token = searchParams.get("token");
-    if (
-      slug &&
-      token &&
-      isValidWorkspacePair(slug, token)
-    ) {
-      upsertEndpointByTokens(slug, token);
-      queueMicrotask(() => {
-        setState(loadWorkspaceState());
+    let cancelled = false;
+
+    const run = async () => {
+      const params = new URLSearchParams(
+        typeof window !== "undefined" ? window.location.search : "",
+      );
+      const slug = params.get("slug");
+      const token = params.get("token");
+      if (
+        slug &&
+        token &&
+        isValidWorkspacePair(slug, token)
+      ) {
+        await attachEndpointByTokensAction(slug, token);
         router.replace("/webhook", { scroll: false });
+      }
+
+      const r = await bootstrapWorkspaceAction();
+      if (cancelled) return;
+      if (!r.success) {
+        setLoadError(r.message);
+        setReady(true);
+        return;
+      }
+      setLoadError(null);
+      setEndpoints(r.endpoints);
+      setSelectedId((prev) => {
+        if (prev && r.endpoints.some((e) => e.id === prev)) return prev;
+        return r.endpoints[0]?.id ?? null;
       });
-    }
-  }, [ready, searchParams, router]);
+      setReady(true);
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const selected = useMemo(() => {
-    if (!state.selectedId) return null;
-    return state.endpoints.find((e) => e.id === state.selectedId) ?? null;
-  }, [state]);
-
-  const requests: WebhookRequestRow[] = useMemo(() => {
-    if (!selected) return [];
-    return buildMockRequestsForEndpoint(selected);
-  }, [selected]);
+    if (!selectedId) return null;
+    return endpoints.find((e) => e.id === selectedId) ?? null;
+  }, [endpoints, selectedId]);
 
   const ingestUrl = selected
     ? buildIngestUrl(origin || "http://localhost", selected.publicSlug, selected.secretToken)
@@ -179,7 +244,7 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
     ? `${origin.replace(/\/$/, "")}${buildWorkspaceAppPath(selected.publicSlug, selected.secretToken)}`
     : "";
 
-  const canAdd = state.endpoints.length < MAX_ENDPOINTS;
+  const canAdd = endpoints.length < MAX_ENDPOINTS_PER_WORKSPACE;
 
   if (!ready) {
     return (
@@ -200,8 +265,8 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
             Inspect and test HTTP webhooks
           </h1>
           <p className="text-muted-foreground mx-auto mt-2 text-sm leading-relaxed md:mx-0">
-            Manage up to {MAX_ENDPOINTS} catcher URLs in this browser. Review
-            sample inbound traffic or send your own test requests—in the spirit of{" "}
+            Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} catcher URLs in this browser. Send traffic to the ingest URL and
+            review captured requests—in the spirit of{" "}
             <a
               className="text-foreground font-medium underline-offset-4 hover:underline"
               href="https://webhook.cool"
@@ -210,9 +275,18 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
             >
               webhook.cool
             </a>
-            . Inbound history will persist once the API is connected.
+            . Requests are stored in D1 when the app runs on Cloudflare Workers.
           </p>
         </header>
+
+        {loadError ? (
+          <div
+            className="border-destructive/50 bg-destructive/10 text-destructive mb-6 rounded-lg border px-4 py-3 text-sm"
+            role="alert"
+          >
+            {loadError}
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
           <aside className="lg:w-72 lg:shrink-0">
@@ -221,21 +295,20 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
                 Your webhooks
               </h2>
               <span className="text-muted-foreground text-xs">
-                {state.endpoints.length}/{MAX_ENDPOINTS}
+                {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE}
               </span>
             </div>
             <ScrollArea className="h-[min(320px,50vh)] pr-3 lg:h-auto">
               <ul className="flex flex-col gap-2">
-                {state.endpoints.map((ep, index) => {
-                  const active = ep.id === state.selectedId;
-                  const canDelete = state.endpoints.length > 1;
+                {endpoints.map((ep, index) => {
+                  const active = ep.id === selectedId;
+                  const canDelete = endpoints.length > 1;
                   return (
                     <li key={ep.id} className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => {
-                          selectEndpoint(ep.id);
-                          refresh();
+                          setSelectedId(ep.id);
                         }}
                         className={`min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
                           active
@@ -262,8 +335,9 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
                             : "At least one webhook is required"
                         }
                         aria-label="Delete webhook"
-                        onClick={() => {
-                          if (removeEndpoint(ep.id)) refresh();
+                        onClick={async () => {
+                          const r = await removeEndpointAction(ep.id);
+                          if (r.success) await refresh();
                         }}
                       >
                         <Trash2 className="size-4" aria-hidden />
@@ -277,10 +351,13 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
               type="button"
               variant="outline"
               className="mt-4 w-full gap-2"
-              disabled={!canAdd}
-              onClick={() => {
-                const ep = addEndpoint();
-                if (ep) refresh();
+              disabled={!canAdd || !!loadError}
+              onClick={async () => {
+                const r = await createEndpointAction();
+                if (r.success) {
+                  setEndpoints((prev) => [...prev, r.endpoint]);
+                  setSelectedId(r.endpoint.id);
+                }
               }}
             >
               <Plus className="size-4" aria-hidden />
@@ -289,7 +366,7 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
             </Button>
             {!canAdd ? (
               <p className="text-muted-foreground mt-2 text-[11px] leading-snug">
-                Maximum {MAX_ENDPOINTS} endpoints. Remove one to add another.
+                Maximum {MAX_ENDPOINTS_PER_WORKSPACE} endpoints. Remove one to add another.
               </p>
             ) : null}
             <p className="text-muted-foreground mt-4 text-[11px] leading-snug lg:hidden">
@@ -337,22 +414,19 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
                           Incoming requests
                         </h2>
                         <Badge variant="secondary" className="text-[10px]">
-                          Sample traffic
+                          {loadError ? "Offline" : "Live (D1)"}
                         </Badge>
                       </div>
 
-                      {requests.length === 0 ? (
+                      {loadError ? (
                         <div className="border-border text-muted-foreground rounded-xl border border-dashed py-16 text-center text-sm">
-                          No requests yet for this webhook URL.
+                          Connect the database to see incoming requests.
                         </div>
                       ) : (
-                        <ul className="flex flex-col gap-3">
-                          {requests.map((row) => (
-                            <li key={row.id}>
-                              <RequestCard row={row} />
-                            </li>
-                          ))}
-                        </ul>
+                        <EndpointRequestList
+                          key={selected.id}
+                          endpointId={selected.id}
+                        />
                       )}
                     </section>
                   </>

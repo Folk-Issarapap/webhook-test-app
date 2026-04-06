@@ -13,8 +13,8 @@
     "db:migrate:local": "wrangler --config d1.wrangler.jsonc d1 migrations apply webhook-test-db --local",
     "db:migrate:remote": "wrangler --config d1.wrangler.jsonc d1 migrations apply webhook-test-db --remote",
     "cf-types": "wrangler types --config wrangler.jsonc",
-    "deploy:workers": "vinext deploy",
-    "deploy:workers:preview": "vinext deploy --preview",
+    "deploy:workers": "pnpm run build && pnpm exec wrangler deploy",
+    "deploy:workers:preview": "pnpm run build && pnpm exec wrangler deploy --env preview",
     "test:r2": "node ./scripts/test-r2-connection.mjs"
   },
   "dependencies": {

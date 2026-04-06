@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import { Suspense } from "react";
 
 import { WebhookWorkspace } from "@/components/webhooks/webhook-workspace";
 
@@ -14,15 +13,5 @@ export default async function WebhookDashboardPage() {
   const h = await headers();
   const origin = resolveOrigin(h);
 
-  return (
-    <Suspense
-      fallback={
-        <div className="text-muted-foreground flex min-h-[50vh] items-center justify-center p-8 text-sm">
-          Loading…
-        </div>
-      }
-    >
-      <WebhookWorkspace origin={origin} />
-    </Suspense>
-  );
+  return <WebhookWorkspace origin={origin} />;
 }

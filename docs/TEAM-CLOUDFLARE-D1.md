@@ -87,6 +87,8 @@ pnpm deploy:workers              # build + wrangler deploy production
 pnpm deploy:workers:preview      # deploy ไป preview environment
 ```
 
+สคริปต์ใช้ **`pnpm run build` แล้ว `pnpm exec wrangler deploy`** (ไม่เรียก `vinext deploy` โดยตรง) เพราะบน **Windows** คำสั่ง `vinext deploy` อาจล้มด้วย `spawnSync ... wrangler ENOENT` — Wrangler ใน `node_modules/.bin` เป็น shim ที่ `execFileSync` รันไม่ได้; การใช้ `pnpm exec wrangler` แก้ปัญหานี้
+
 > **หมายเหตุ:** อย่าใช้ `pnpm deploy` อย่างเดียว — นี่เป็นคำสั่ง built-in ของ pnpm สำหรับ workspace (`ERR_PNPM_CANNOT_DEPLOY`) ไม่ได้รันสคริปต์ใน `package.json` ให้ใช้ชื่อด้านบน หรือ `pnpm run deploy:workers`
 
 **Authentication**
@@ -137,7 +139,36 @@ Log แบบนี้มักเกิดเมื่อ **`CLOUDFLARE_API_TOK
 
 ---
 
-## 7. อ้างอิงใน repo
+## 7. แก้ error `7403` ตอน `db:migrate:remote` / D1 API
+
+ข้อความแบบ **The given account is not valid or is not authorized to access this service [code: 7403]** แปลว่า **ตัวตนที่ Wrangler ใช้อยู่** (OAuth หรือ `CLOUDFLARE_API_TOKEN`) **ไม่ตรงกับ** `account_id` ใน [`d1.wrangler.jsonc`](../d1.wrangler.jsonc) หรือ **ไม่มีสิทธิ์** กับ D1 database นั้น
+
+ทำตามลำดับนี้:
+
+1. **ยืนยันว่าเป็นสมาชิก account เดียวกับใน config**  
+   เจ้าของ Cloudflare account (เพื่อนในทีม) ต้องเชิญอีเมลของคุณที่ **Dashboard → Manage account → Members** และให้ role ที่ทำงานกับ **D1** ได้ (ดูข้อ 2) แล้วคุณต้อง **ยอมรับคำเชิญ** ในอีเมล
+
+2. **เช็คว่า Wrangler ชี้ account ไหน**  
+   ```bash
+   pnpm exec wrangler whoami
+   ```  
+   ต้องเห็น account ที่ **ตรงกับ** `account_id` ใน `d1.wrangler.jsonc` (หรืออย่างน้อยคุณต้องมีสิทธิ์บน account นั้น)
+
+3. **อย่าให้ token ผิดตัวบัง OAuth**  
+   ถ้ามี `CLOUDFLARE_API_TOKEN` ใน `.env` แต่ token นั้นเป็นของบัญชีอื่นหรือ scope ไม่ครอบคลุม account นี้ — **คอมเมนต์บรรทัดนั้นชั่วคราว** (แค่ `unset` ในเทอร์มินัลไม่พอ เพราะ Wrangler อ่านจากไฟล์) แล้วรัน `pnpm exec wrangler login` ให้ login เข้า **บัญชีที่เป็นสมาชิกของทีม** จากนั้นลอง `pnpm db:migrate:remote` อีกครั้ง
+
+4. **ถ้าใช้ API Token แทน login**  
+   สร้าง token ที่ [API Tokens](https://dash.cloudflare.com/profile/api-tokens) โดย **Account Resources** ต้องรวม account ที่มี `account_id` ตรงกับใน config และมีสิทธิ์ที่เกี่ยวกับ **D1** (preset **Edit Cloudflare Workers** มักใช้ได้ แต่ต้องเลือก account ให้ถูก)
+
+5. **ถ้ายังไม่ได้รับสิทธิ์ทีม** — ใช้ได้แค่ **local**  
+   รัน `pnpm db:migrate:local` เพื่อพัฒนาในเครื่องได้โดยไม่แตะ remote จนกว่าทีมจะเพิ่มสมาชิกหรือแชร์ token/flow ที่ถูกต้อง
+
+6. **ทางเลือก: สร้าง D1 บน account ของคุณเอง (โปรเจกต์ส่วนตัว)**  
+   สร้าง D1 ใหม่ใน Dashboard ของ **บัญชีคุณ** แล้วอัปเดต `account_id` และ `database_id` ใน `d1.wrangler.jsonc` และ [`wrangler.jsonc`](../wrangler.jsonc) ให้ตรงกับ database ชุดใหม่ จากนั้นรัน `pnpm cf-types` — **ไม่ควร commit ค่าส่วนตัวลง repo หลัก** ถ้าทีมใช้ database ร่วมกัน; ใช้เฉพาะ `.dev` / branch ส่วนตัวหรือคุยกับทีมก่อน
+
+---
+
+## 8. อ้างอิงใน repo
 
 - [`wrangler.jsonc`](../wrangler.jsonc) — config หลักสำหรับ **deploy Worker** (รวม D1)
 - [`d1.wrangler.jsonc`](../d1.wrangler.jsonc) — config เฉพาะคำสั่ง `db:migrate:*` เมื่อต้องการแยกจาก deploy (database เดียวกัน)

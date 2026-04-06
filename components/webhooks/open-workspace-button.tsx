@@ -11,7 +11,7 @@ type OpenWorkspaceButtonProps = {
   children?: React.ReactNode;
 };
 
-/** Navigates to `/webhook`; first visit provisions one endpoint in localStorage. */
+/** Navigates to `/webhook` (workspace cookie + D1 provision first catcher on load). */
 export function OpenWorkspaceButton({
   size = "lg",
   className,
