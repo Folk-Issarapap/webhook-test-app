@@ -1,0 +1,15 @@
+---
+description: Use shadcn/ui components from components/ui for UI primitives
+alwaysApply: true
+---
+
+# shadcn/ui only for UI primitives
+
+For **buttons, tables, cards, forms** (inputs, labels, field layout), **dialogs, sheets, dropdowns, tabs, alerts, badges, avatars, selects, checkboxes, switches, skeletons**, and other controls that shadcn/ui provides:
+
+1. **Import from** `@/components/ui/...` (see `components.json` aliases). Do not introduce parallel UI libraries (MUI, Chakra, Ant Design, etc.) unless the user explicitly asks.
+2. **Do not** replace shadcn primitives with raw HTML styled from scratch when a matching `@/components/ui/*` component exists (e.g. use `Button` from `@/components/ui/button`, not a one-off `<button className="...">` for standard actions).
+3. **Forms**: Prefer the project’s shadcn-based patterns (`Field`, `Label`, `Input`, etc. under `@/components/ui`) and composition with React Hook Form / server actions as in `ARCHITECTURE.md`, not ad-hoc unstyled form markup.
+4. **Missing block**: If the right primitive is not in `components/ui/`, add it with the shadcn CLI for this repo (e.g. `pnpm dlx shadcn@latest add <component>`) so new UI stays consistent with `components.json`.
+
+Domain-specific composites can live under `@/components/...` but should **build on** `@/components/ui` primitives underneath.

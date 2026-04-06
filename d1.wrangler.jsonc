@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "webhook-test-app",
+	"compatibility_date": "2026-04-06",
+	"compatibility_flags": ["nodejs_compat"],
+	"account_id": "8b11e0589236d544bf6ea551ccdd57cb",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "webhook-test-db",
+			"database_id": "a8ae335d-78ed-44ac-92d2-6e9c8c3c14a1"
+		}
+	]
+}

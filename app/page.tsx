@@ -1,4 +1,6 @@
 import Image from "next/image";
+import nextLogoUrl from "../public/next.svg?url";
+import vercelLogoUrl from "../public/vercel.svg?url";
 
 export default function Home() {
   return (
@@ -6,7 +8,7 @@ export default function Home() {
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
         <Image
           className="dark:invert"
-          src="/next.svg"
+          src={nextLogoUrl}
           alt="Next.js logo"
           width={100}
           height={20}
@@ -43,7 +45,7 @@ export default function Home() {
           >
             <Image
               className="dark:invert"
-              src="/vercel.svg"
+              src={vercelLogoUrl}
               alt="Vercel logomark"
               width={16}
               height={16}
