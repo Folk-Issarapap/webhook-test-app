@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--max-http-header-size=65536 vinext dev",
+    "dev": "cross-env NODE_OPTIONS=--max-http-header-size=65536 vinext dev",
     "build": "vinext build && node ./scripts/fix-vinext-dist-imports.cjs",
-    "start": "NODE_OPTIONS=--max-http-header-size=65536 vinext start",
+    "start": "cross-env NODE_OPTIONS=--max-http-header-size=65536 vinext start",
     "dev:next": "next dev",
     "build:next": "next build",
     "start:next": "next start",
@@ -42,6 +42,7 @@
     "vinext": "^0.0.39"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "@cloudflare/vite-plugin": "^1.31.0",
     "@cloudflare/workers-types": "^4.20260405.1",
     "@tailwindcss/postcss": "^4",

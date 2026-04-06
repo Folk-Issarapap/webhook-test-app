@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { FloatingThemeToggle } from "@/components/floating-theme-toggle";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+
 export const metadata: Metadata = {
-  title: "Webhook test",
+  title: "Webhook workspace",
   description:
-    "Catch, log, and inspect HTTP webhooks—endpoints, payloads, and request history.",
+    "Receive, log, and inspect HTTP webhooks—multiple endpoints, payloads, and request history in one place.",
 };
 
 export default function RootLayout({
@@ -13,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -26,7 +29,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider>
+          {children}
+          <FloatingThemeToggle />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

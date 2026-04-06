@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Inbox, Route, ScrollText, Webhook } from "lucide-react";
 
+import { OpenWorkspaceButton } from "@/components/webhooks/open-workspace-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,7 +40,7 @@ export default function Home() {
               <Webhook className="size-5" aria-hidden />
             </span>
             <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
-              Webhook test
+              Webhook workspace
             </p>
           </div>
           <div className="space-y-4">
@@ -55,9 +55,7 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button size="lg" asChild>
-              <Link href="/webhooks">Open webhook workspace</Link>
-            </Button>
+            <OpenWorkspaceButton />
             <Button variant="outline" size="lg" asChild>
               <a href="#foundations-heading">What the app covers</a>
             </Button>
@@ -122,14 +120,16 @@ export default function Home() {
               to create endpoints and list recent requests.
             </li>
             <li>
-              Tables and filters on{" "}
-              <Link
-                href="/webhooks"
-                className="text-foreground font-medium underline-offset-4 hover:underline"
-              >
-                /webhooks
-              </Link>{" "}
-              for a usable operator UI (copy URL, filter by status or time).
+              Workspace UI at{" "}
+              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">
+                /webhook
+              </code>{" "}
+              (deep links under{" "}
+              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">
+                /webhook/[publicSlug]/[secretToken]
+              </code>
+              ) — copy URLs, list requests, expand headers and body (sample traffic until
+              persistence ships).
             </li>
           </ol>
         </section>
