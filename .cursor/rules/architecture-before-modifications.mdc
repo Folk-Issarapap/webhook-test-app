@@ -1,0 +1,14 @@
+---
+description: Read ARCHITECTURE.md before editing this repository
+alwaysApply: true
+---
+
+# Architecture context (required)
+
+Before **any** code or config change in this repo (including dependency, build, or routing work):
+
+1. **Read** the project architecture guide: `ARCHITECTURE.md` at the repository root (use the Read tool / open the file; do not rely on training-data assumptions).
+2. **Align** changes with the documented folder layout, auth/session flow, server actions, services, routing, forms, validation, RBAC, and i18n patterns described there.
+3. If a change would **conflict** with that guide, call it out and follow the documented patterns unless the user explicitly overrides.
+
+Skip re-reading only for **trivial** one-off tasks that cannot affect architecture (e.g. fixing a typo in an unrelated comment the user pointed to)—when in doubt, read `ARCHITECTURE.md` first.

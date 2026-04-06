@@ -1,0 +1,16 @@
+diff --git a/dist/server/prod-server.js b/dist/server/prod-server.js
+index 32e9a0d9e929e2aed2b7c504290f3ef2be1ed068..287f2b70558df7ad081f5137bd3d0af8d6cf20fa 100644
+--- a/dist/server/prod-server.js
++++ b/dist/server/prod-server.js
+@@ -525,8 +525,9 @@ async function startProdServer(options = {}) {
+ 	const compress = !noCompression;
+ 	const resolvedOutDir = path.resolve(outDir);
+ 	const clientDir = path.join(resolvedOutDir, "client");
+-	const rscEntryPath = path.join(resolvedOutDir, "server", "index.js");
+-	const serverEntryPath = path.join(resolvedOutDir, "server", "entry.js");
++	const serverDir = path.join(resolvedOutDir, "server");
++	const rscEntryPath = fs.existsSync(path.join(serverDir, "index.mjs")) ? path.join(serverDir, "index.mjs") : path.join(serverDir, "index.js");
++	const serverEntryPath = fs.existsSync(path.join(serverDir, "entry.mjs")) ? path.join(serverDir, "entry.mjs") : path.join(serverDir, "entry.js");
+ 	const isAppRouter = fs.existsSync(rscEntryPath);
+ 	if (!isAppRouter && !fs.existsSync(serverEntryPath)) {
+ 		console.error(`[vinext] No build output found in ${outDir}`);
