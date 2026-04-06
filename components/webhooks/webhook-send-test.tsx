@@ -2,6 +2,7 @@
 
 import { Loader2, Send } from "lucide-react";
 import { useCallback, useState } from "react";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,19 @@ type TestWebhookSuccess = {
   durationMs: number;
 };
 
+const headersSchema = z.object({}).catchall(z.string());
+
+const jsonTextSchema = z.string().superRefine((value, ctx) => {
+  try {
+    JSON.parse(value);
+  } catch {
+    ctx.addIssue({
+      code: "custom",
+      message: "Body must be valid JSON.",
+    });
+  }
+});
+
 function tryFormatJson(raw: string): string {
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -70,9 +84,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
   );
   const [bodyMode, setBodyMode] = useState<"custom" | "template">("template");
   const [bodyTemplateId, setBodyTemplateId] = useState("hello");
-  const [body, setBody] = useState(
-    () => getBodyTemplateById("hello") ?? "{}",
-  );
+  const [body, setBody] = useState(() => getBodyTemplateById("hello") ?? "{}");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TestWebhookSuccess | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -88,28 +100,25 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
     let headersObj: Record<string, string>;
     try {
       const parsed: unknown = JSON.parse(headersText || "{}");
-      if (
-        parsed === null ||
-        typeof parsed !== "object" ||
-        Array.isArray(parsed)
-      ) {
-        setClientError("Headers must be a JSON object.");
+      const validatedHeaders = headersSchema.safeParse(parsed);
+      if (!validatedHeaders.success) {
+        setClientError("Headers must be a JSON object of string values.");
         return;
       }
-      headersObj = {};
-      for (const [k, v] of Object.entries(parsed)) {
-        if (typeof v !== "string") {
-          setClientError(`Header "${k}" must be a string value.`);
-          return;
-        }
-        headersObj[k] = v;
-      }
+      headersObj = validatedHeaders.data;
     } catch {
       setClientError("Headers must be valid JSON.");
       return;
     }
 
     const skipBody = method === "GET" || method === "HEAD";
+    if (!skipBody) {
+      const validatedBody = jsonTextSchema.safeParse(body);
+      if (!validatedBody.success) {
+        setClientError(validatedBody.error.issues[0]?.message ?? "Body must be valid JSON.");
+        return;
+      }
+    }
 
     setLoading(true);
     try {
@@ -172,7 +181,6 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
           <code className="font-mono text-xs">https</code> are allowed; timeout
           is 30s.
         </p>
-
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -215,19 +223,6 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              type="button"
-              className="gap-2"
-              disabled={loading || !url.trim()}
-              onClick={() => void send()}
-            >
-              {loading ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-              ) : (
-                <Send className="size-4" aria-hidden />
-              )}
-              Send request
-            </Button>
           </div>
 
           <div className="space-y-2">
@@ -294,7 +289,8 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
               id="test-headers"
               className={cn(
                 "font-mono text-xs min-h-[100px]",
-                headersMode === "template" && "bg-muted/40 text-muted-foreground",
+                headersMode === "template" &&
+                  "bg-muted/40 text-muted-foreground",
               )}
               value={headersText}
               readOnly={headersMode === "template"}
@@ -372,7 +368,8 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 id="test-body"
                 className={cn(
                   "font-mono text-xs min-h-[140px]",
-                  bodyMode === "template" && "bg-muted/40 text-muted-foreground",
+                  bodyMode === "template" &&
+                    "bg-muted/40 text-muted-foreground",
                 )}
                 value={body}
                 readOnly={bodyMode === "template"}
@@ -392,12 +389,26 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             </p>
           )}
         </div>
-
         {clientError ? (
           <p className="text-destructive mt-4 text-sm" role="alert">
             {clientError}
           </p>
-        ) : null}
+        ) : null}{" "}
+        <div className="w-full flex justify-end pt-4">
+          <Button
+            type="button"
+            className="gap-2"
+            disabled={loading || !url.trim()}
+            onClick={() => void send()}
+          >
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Send className="size-4" aria-hidden />
+            )}
+            Send request
+          </Button>
+        </div>
       </div>
 
       {result ? (

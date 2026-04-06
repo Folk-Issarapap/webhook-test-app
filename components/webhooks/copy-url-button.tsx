@@ -26,20 +26,20 @@ export function CopyUrlButton({ url, label = "Copy URL" }: CopyUrlButtonProps) {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="sm"
-      className="shrink-0 gap-1.5 font-mono text-xs"
+      className="shrink-0 gap-2 font-mono text-xs"
       onClick={handleCopy}
     >
       {copied ? (
         <>
           <Check className="size-3.5" aria-hidden />
-          Copied
+      
         </>
       ) : (
         <>
           <Copy className="size-3.5" aria-hidden />
-          {label}
+       
         </>
       )}
     </Button>

@@ -200,11 +200,7 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
       );
       const slug = params.get("slug");
       const token = params.get("token");
-      if (
-        slug &&
-        token &&
-        isValidWorkspacePair(slug, token)
-      ) {
+      if (slug && token && isValidWorkspacePair(slug, token)) {
         await attachEndpointByTokensAction(slug, token);
         router.replace("/webhook", { scroll: false });
       }
@@ -237,7 +233,11 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
   }, [endpoints, selectedId]);
 
   const ingestUrl = selected
-    ? buildIngestUrl(origin || "http://localhost", selected.publicSlug, selected.secretToken)
+    ? buildIngestUrl(
+        origin || "http://localhost",
+        selected.publicSlug,
+        selected.secretToken,
+      )
     : "";
 
   const deepLink = selected
@@ -265,8 +265,9 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
             Inspect and test HTTP webhooks
           </h1>
           <p className="text-muted-foreground mx-auto mt-2 text-sm leading-relaxed md:mx-0">
-            Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} catcher URLs in this browser. Send traffic to the ingest URL and
-            review captured requests—in the spirit of{" "}
+            Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} catcher URLs in this
+            browser. Send traffic to the ingest URL and review captured
+            requests—in the spirit of{" "}
             <a
               className="text-foreground font-medium underline-offset-4 hover:underline"
               href="https://webhook.cool"
@@ -366,7 +367,8 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
             </Button>
             {!canAdd ? (
               <p className="text-muted-foreground mt-2 text-[11px] leading-snug">
-                Maximum {MAX_ENDPOINTS_PER_WORKSPACE} endpoints. Remove one to add another.
+                Maximum {MAX_ENDPOINTS_PER_WORKSPACE} endpoints. Remove one to
+                add another.
               </p>
             ) : null}
             <p className="text-muted-foreground mt-4 text-[11px] leading-snug lg:hidden">
@@ -397,10 +399,10 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
                         Send webhooks to this URL
                       </p>
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                        <code className="bg-background border-border block w-full flex-1 rounded-lg border px-3 py-3 font-mono text-xs leading-relaxed break-all md:text-sm">
-                          {ingestUrl}
+                        <code className="flex justify-between bg-background border-border w-full flex-1 rounded-lg border px-3 py-3 font-mono text-xs leading-relaxed break-all md:text-sm">
+                          {ingestUrl}{" "}
+                          <CopyUrlButton url={ingestUrl} label="Copy" />
                         </code>
-                        <CopyUrlButton url={ingestUrl} label="Copy" />
                       </div>
                       <p className="text-muted-foreground mt-4 text-center text-[11px] md:text-left">
                         Direct link to this catcher only:{" "}
