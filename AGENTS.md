@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Project architecture
 
-Before modifying this codebase, read **`ARCHITECTURE.md`** at the repository root and keep changes consistent with the structure and patterns documented there (actions, services, routing, auth, forms, validation, RBAC, i18n).
+Before modifying this codebase, read **`docs/ARCHITECTURE.md`** and keep changes consistent with the structure and patterns documented there (actions, services, routing, auth, forms, validation, RBAC, i18n). For a chronological summary of what’s been set up in *this* repo, see **`docs/PROJECT-HISTORY.md`**.
 
 ## UI components (shadcn/ui)
 
