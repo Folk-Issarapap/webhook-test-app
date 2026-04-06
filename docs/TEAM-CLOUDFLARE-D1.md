@@ -89,6 +89,8 @@ pnpm deploy:workers:preview      # deploy ไป preview environment
 
 สคริปต์ใช้ **`pnpm run build` แล้ว `pnpm exec wrangler deploy`** (ไม่เรียก `vinext deploy` โดยตรง) เพราะบน **Windows** คำสั่ง `vinext deploy` อาจล้มด้วย `spawnSync ... wrangler ENOENT` — Wrangler ใน `node_modules/.bin` เป็น shim ที่ `execFileSync` รันไม่ได้; การใช้ `pnpm exec wrangler` แก้ปัญหานี้
 
+ถ้าเปิด Workers URL แล้วได้ **HTTP 404** และ body เป็น **`error code: 1042`** — มักเกิดเมื่อ Worker / เฟรมเวิร์ก (เช่น Vinext RSC) ทำ **`fetch` ไปที่ hostname ของ Worker ตัวเอง** ซึ่ง Cloudflare บล็อกตามค่าเริ่มต้น ให้ตรวจว่า [`wrangler.jsonc`](../wrangler.jsonc) มี **`global_fetch_strictly_public`** ใน `compatibility_flags` แล้ว **deploy ใหม่** (ดู [Compatibility flags](https://developers.cloudflare.com/workers/configuration/compatibility-flags))
+
 > **หมายเหตุ:** อย่าใช้ `pnpm deploy` อย่างเดียว — นี่เป็นคำสั่ง built-in ของ pnpm สำหรับ workspace (`ERR_PNPM_CANNOT_DEPLOY`) ไม่ได้รันสคริปต์ใน `package.json` ให้ใช้ชื่อด้านบน หรือ `pnpm run deploy:workers`
 
 **Authentication**
