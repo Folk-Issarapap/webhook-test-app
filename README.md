@@ -29,7 +29,7 @@ This repo includes a **pnpm patch** for `vinext` (`patches/vinext@0.0.39.patch`)
 |-------|--------|
 | **Package manager** | Use **pnpm** (`pnpm install`) |
 | **Secrets** | Copy [`.env.example`](./.env.example) to `.env` — **do not commit `.env`** |
-| **Longer docs** | [Team guide: Cloudflare / D1 / deploy](./docs/TEAM-CLOUDFLARE-D1.md) · [Project history](./docs/PROJECT-HISTORY.md) · [Architecture reference](./docs/ARCHITECTURE.md) |
+| **Longer docs** | [PRD (product scope)](./docs/PRD.md) · [Team guide: Cloudflare / D1 / deploy](./docs/TEAM-CLOUDFLARE-D1.md) · [Project history](./docs/PROJECT-HISTORY.md) · [Architecture reference](./docs/ARCHITECTURE.md) |
 | **AI / Cursor** | Read [`AGENTS.md`](./AGENTS.md) and `.cursor/rules/` |
 
 ---
