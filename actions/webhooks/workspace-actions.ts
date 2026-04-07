@@ -143,6 +143,7 @@ export async function createEndpointAction(): Promise<
   const last = endpoints[endpoints.length - 1];
   if (!last) return jsonError("Failed to create endpoint.");
 
+  revalidatePath("/");
   revalidatePath("/webhook");
   return { success: true, endpoint: toDto(last) };
 }
@@ -173,6 +174,7 @@ export async function removeEndpointAction(
   await deleteWorkspaceLink(db, workspaceId, endpointId);
   await deleteEndpointIfOrphaned(db, endpointId);
 
+  revalidatePath("/");
   revalidatePath("/webhook");
   return { success: true };
 }
@@ -213,6 +215,7 @@ export async function attachEndpointByTokensAction(
     await ensureWorkspaceLink(db, workspaceId, ep.id);
   }
 
+  revalidatePath("/");
   revalidatePath("/webhook");
   return { success: true, endpoint: toDto(ep) };
 }

@@ -13,12 +13,12 @@ export default async function WebhookDeepLinkPage({ params }: PageProps) {
   const secretToken = decodeURIComponent(rawSecret);
 
   if (!isValidWorkspacePair(publicSlug, secretToken)) {
-    redirect("/webhook");
+    redirect("/");
   }
 
   const q = new URLSearchParams({
     slug: publicSlug,
     token: secretToken,
   });
-  redirect(`/webhook?${q.toString()}`);
+  redirect(`/?${q.toString()}`);
 }

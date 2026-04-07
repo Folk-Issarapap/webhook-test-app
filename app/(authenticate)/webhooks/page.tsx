@@ -8,7 +8,7 @@ export default function WebhooksEntryPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/webhook");
+    router.replace("/");
   }, [router]);
 
   return (

@@ -3,9 +3,11 @@ import "./globals.css";
 
 import { FloatingThemeToggle } from "@/components/floating-theme-toggle";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SiteFooter } from "@/components/site-footer";
+import { APP_DISPLAY_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Webhook workspace",
+  title: APP_DISPLAY_NAME,
   description:
     "Receive, log, and inspect HTTP webhooks—multiple endpoints, payloads, and request history in one place.",
 };
@@ -31,7 +33,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          {children}
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
           <FloatingThemeToggle />
         </ThemeProvider>
       </body>

@@ -1,7 +1,14 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Plus,
+  Radio,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -15,12 +22,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  getHttpMethodBadgeClass,
+  getHttpMethodCardAccentClass,
+} from "@/lib/http-method-styles";
 import { MAX_ENDPOINTS_PER_WORKSPACE } from "@/lib/webhooks/constants";
 import { isValidWorkspacePair } from "@/lib/webhooks/workspace-storage";
 import { buildIngestUrl, buildWorkspaceAppPath } from "@/lib/webhooks/urls";
@@ -58,14 +70,25 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="border-border bg-card rounded-lg border shadow-sm">
+      <div
+        className={cn(
+          "border-border bg-card rounded-lg border border-l-4 shadow-sm",
+          getHttpMethodCardAccentClass(row.method),
+        )}
+      >
         <CollapsibleTrigger className="hover:bg-muted/40 flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors">
           {open ? (
             <ChevronDown className="text-muted-foreground size-4 shrink-0" />
           ) : (
             <ChevronRight className="text-muted-foreground size-4 shrink-0" />
           )}
-          <Badge variant="outline" className="font-mono text-xs">
+          <Badge
+            variant="outline"
+            className={cn(
+              "font-mono text-[11px] font-semibold tracking-wide",
+              getHttpMethodBadgeClass(row.method),
+            )}
+          >
             {row.method}
           </Badge>
           <span className="text-muted-foreground text-xs whitespace-nowrap">
@@ -118,6 +141,10 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
 
 type WebhookWorkspaceProps = {
   origin: string;
+  /** Where to stay after `?slug=&token=` attach (default `/webhook`). */
+  routeBasePath?: string;
+  /** Hide the marketing-style header (e.g. when the parent page already has a hero). */
+  showHeader?: boolean;
 };
 
 function EndpointRequestList({ endpointId }: { endpointId: string }) {
@@ -152,8 +179,12 @@ function EndpointRequestList({ endpointId }: { endpointId: string }) {
 
   if (requests.length === 0) {
     return (
-      <div className="border-border text-muted-foreground rounded-xl border border-dashed py-16 text-center text-sm">
-        No requests yet for this webhook URL.
+      <div className="border-border from-muted/40 to-primary/4 text-muted-foreground rounded-xl border border-dashed bg-linear-to-b py-16 text-center text-sm">
+        <p className="text-foreground/80 font-medium">No requests yet</p>
+        <p className="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed">
+          Send traffic to the ingest URL above, or use the Send test tab—events
+          will show up here.
+        </p>
       </div>
     );
   }
@@ -169,7 +200,11 @@ function EndpointRequestList({ endpointId }: { endpointId: string }) {
   );
 }
 
-export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
+export function WebhookWorkspace({
+  origin,
+  routeBasePath = "/webhook",
+  showHeader = true,
+}: WebhookWorkspaceProps) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [endpoints, setEndpoints] = useState<WorkspaceEndpointDto[]>([]);
@@ -200,13 +235,9 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
       );
       const slug = params.get("slug");
       const token = params.get("token");
-      if (
-        slug &&
-        token &&
-        isValidWorkspacePair(slug, token)
-      ) {
+      if (slug && token && isValidWorkspacePair(slug, token)) {
         await attachEndpointByTokensAction(slug, token);
-        router.replace("/webhook", { scroll: false });
+        router.replace(routeBasePath, { scroll: false });
       }
 
       const r = await bootstrapWorkspaceAction();
@@ -229,7 +260,7 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, routeBasePath]);
 
   const selected = useMemo(() => {
     if (!selectedId) return null;
@@ -237,7 +268,11 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
   }, [endpoints, selectedId]);
 
   const ingestUrl = selected
-    ? buildIngestUrl(origin || "http://localhost", selected.publicSlug, selected.secretToken)
+    ? buildIngestUrl(
+        origin || "http://localhost",
+        selected.publicSlug,
+        selected.secretToken,
+      )
     : "";
 
   const deepLink = selected
@@ -248,36 +283,46 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
 
   if (!ready) {
     return (
-      <div className="text-muted-foreground flex min-h-[50vh] items-center justify-center p-8 text-sm">
-        Loading workspace…
+      <div className="text-muted-foreground flex min-h-[50vh] flex-col items-center justify-center gap-3 p-8 text-sm">
+        <Loader2 className="text-primary size-8 animate-spin" aria-hidden />
+        <span>Loading workspace…</span>
       </div>
     );
   }
 
   return (
     <div className="bg-background text-foreground min-h-full">
-      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
-        <header className="mb-8 border-b border-border pb-6 text-center md:text-left">
-          <p className="text-muted-foreground mb-1 font-mono text-[11px] uppercase tracking-[0.2em]">
-            Webhook workspace
-          </p>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-            Inspect and test HTTP webhooks
-          </h1>
-          <p className="text-muted-foreground mx-auto mt-2 text-sm leading-relaxed md:mx-0">
-            Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} catcher URLs in this browser. Send traffic to the ingest URL and
-            review captured requests—in the spirit of{" "}
-            <a
-              className="text-foreground font-medium underline-offset-4 hover:underline"
-              href="https://webhook.cool"
-              target="_blank"
-              rel="noreferrer"
-            >
-              webhook.cool
-            </a>
-            . Requests are stored in D1 when the app runs on Cloudflare Workers.
-          </p>
-        </header>
+      <div
+        className={cn(
+          "mx-auto max-w-6xl px-4 md:px-6",
+          showHeader ? "py-8 md:py-10" : "pb-10 pt-0 md:pb-12",
+        )}
+      >
+        {showHeader ? (
+          <header className="mb-8 border-b border-border pb-6 text-center md:text-left">
+            <p className="text-muted-foreground mb-1 font-mono text-[11px] uppercase tracking-[0.2em]">
+              Webhook workspace
+            </p>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+              Inspect and test HTTP webhooks
+            </h1>
+            <p className="text-muted-foreground mx-auto mt-2 text-sm leading-relaxed md:mx-0">
+              Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} catcher URLs in this
+              browser. Send traffic to the ingest URL and review captured
+              requests—in the spirit of{" "}
+              <a
+                className="text-foreground font-medium underline-offset-4 hover:underline"
+                href="https://webhook.cool"
+                target="_blank"
+                rel="noreferrer"
+              >
+                webhook.cool
+              </a>
+              . Requests are stored in D1 when the app runs on Cloudflare
+              Workers.
+            </p>
+          </header>
+        ) : null}
 
         {loadError ? (
           <div
@@ -291,14 +336,17 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
           <aside className="lg:w-72 lg:shrink-0">
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold tracking-tight">
+              <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+                <span className="bg-primary/12 text-primary ring-primary/20 flex size-8 items-center justify-center rounded-lg ring-1">
+                  <Radio className="size-4" aria-hidden />
+                </span>
                 Your webhooks
               </h2>
               <span className="text-muted-foreground text-xs">
                 {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE}
               </span>
             </div>
-            <ScrollArea className="h-[min(320px,50vh)] pr-3 lg:h-auto">
+            <ScrollArea className="max-h-[min(320px,50vh)] pr-3 lg:max-h-none lg:h-auto">
               <ul className="flex flex-col gap-2">
                 {endpoints.map((ep, index) => {
                   const active = ep.id === selectedId;
@@ -366,7 +414,8 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
             </Button>
             {!canAdd ? (
               <p className="text-muted-foreground mt-2 text-[11px] leading-snug">
-                Maximum {MAX_ENDPOINTS_PER_WORKSPACE} endpoints. Remove one to add another.
+                Maximum {MAX_ENDPOINTS_PER_WORKSPACE} endpoints. Remove one to
+                add another.
               </p>
             ) : null}
             <p className="text-muted-foreground mt-4 text-[11px] leading-snug lg:hidden">
@@ -377,7 +426,7 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
 
           <div className="min-w-0 flex-1">
             <Tabs defaultValue="inspect" className="w-full">
-              <TabsList variant="line" className="mb-6 w-full max-w-md">
+              <TabsList className="mb-6 grid h-10 w-full grid-cols-2 p-1">
                 <TabsTrigger value="inspect">Inspect</TabsTrigger>
                 <TabsTrigger value="send">Send test</TabsTrigger>
               </TabsList>
@@ -390,7 +439,7 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
                 ) : (
                   <>
                     <section
-                      className="border-border bg-muted/30 rounded-xl border p-5 md:p-6"
+                      className="border-border bg-primary/6 rounded-xl border p-5 md:p-6"
                       aria-label="Selected webhook URL"
                     >
                       <p className="text-muted-foreground mb-2 text-center text-[11px] font-semibold uppercase tracking-wide md:text-left">
@@ -413,7 +462,14 @@ export function WebhookWorkspace({ origin }: WebhookWorkspaceProps) {
                         <h2 className="font-heading text-lg font-medium tracking-tight">
                           Incoming requests
                         </h2>
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge
+                          variant="secondary"
+                          className={
+                            loadError
+                              ? "text-[10px]"
+                              : "border-emerald-500/35 bg-emerald-500/12 text-emerald-900 dark:text-emerald-100 text-[10px]"
+                          }
+                        >
                           {loadError ? "Offline" : "Live (D1)"}
                         </Badge>
                       </div>

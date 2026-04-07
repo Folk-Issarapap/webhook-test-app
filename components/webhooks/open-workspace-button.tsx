@@ -11,7 +11,7 @@ type OpenWorkspaceButtonProps = {
   children?: React.ReactNode;
 };
 
-/** Navigates to `/webhook` (workspace cookie + D1 provision first catcher on load). */
+/** Navigates to `/` where the workspace loads (cookie + D1 provision on load). */
 export function OpenWorkspaceButton({
   size = "lg",
   className,
@@ -25,7 +25,7 @@ export function OpenWorkspaceButton({
       size={size}
       className={className}
       onClick={() => {
-        router.push("/webhook");
+        router.push("/");
       }}
     >
       {children}

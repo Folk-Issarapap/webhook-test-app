@@ -1,138 +1,111 @@
-import { Inbox, Route, ScrollText, Webhook } from "lucide-react";
+import { headers } from "next/headers";
+import { Inbox, Route, Webhook } from "lucide-react";
 
-import { OpenWorkspaceButton } from "@/components/webhooks/open-workspace-button";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { WebhookWorkspace } from "@/components/webhooks/webhook-workspace";
+import { Separator } from "@/components/ui/separator";
+import { APP_DISPLAY_NAME } from "@/lib/site";
+import { resolveRequestOrigin } from "@/lib/server/request-origin";
+import { cn } from "@/lib/utils";
 
-const foundations = [
+const steps = [
   {
     icon: Route,
-    title: "Webhook endpoints",
-    description:
-      "Each catcher has its own URL path or token. Point Stripe, GitHub, or any HTTP client at it—GET, POST, PUT, etc.",
+    title: "Copy URL",
+    description: "Grab the catcher URL from the panel below.",
+    iconWrap: "bg-sky-500/15 text-sky-600 ring-sky-500/25 dark:text-sky-300",
   },
   {
     icon: Inbox,
-    title: "Capture payloads",
-    description:
-      "Store method, path, headers, and body so you can debug integrations without tailing server logs.",
+    title: "Send traffic",
+    description: "Paste it in Bropay, GitHub, or curl.",
+    iconWrap:
+      "bg-violet-500/15 text-violet-600 ring-violet-500/25 dark:text-violet-300",
   },
   {
-    icon: ScrollText,
-    title: "Request history",
-    description:
-      "Browse recent deliveries per endpoint, newest first. Useful for replaying what a provider actually sent.",
+    icon: Webhook,
+    title: "Inspect",
+    description: "Headers and body show up live.",
+    iconWrap:
+      "bg-emerald-500/15 text-emerald-600 ring-emerald-500/25 dark:text-emerald-300",
   },
 ] as const;
 
-export default function Home() {
+export default async function Home() {
+  const h = await headers();
+  const origin = resolveRequestOrigin(h);
+
   return (
     <div className="bg-background text-foreground">
-      <div className="mx-auto flex min-h-full max-w-4xl flex-col gap-14 px-6 py-16 md:gap-16 md:py-20">
-        <header className="flex flex-col gap-6">
-          <div className="flex items-center gap-3">
-            <span className="bg-primary/10 text-primary ring-ring/20 flex size-11 items-center justify-center rounded-xl ring-1">
-              <Webhook className="size-5" aria-hidden />
-            </span>
-            <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
-              Webhook workspace
-            </p>
-          </div>
-          <div className="space-y-4">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-              Catch and inspect HTTP webhooks in one place
-            </h1>
-            <p className="text-muted-foreground max-w-2xl text-base leading-relaxed md:text-lg">
-              This app is built to behave like a request bin for your team: expose
-              stable URLs, record what hits them, and inspect headers and bodies when
-              something misbehaves. Persistence is backed by D1 once the API and UI are
-              wired to your schema.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <OpenWorkspaceButton />
-            <Button variant="outline" size="lg" asChild>
-              <a href="#foundations-heading">What the app covers</a>
-            </Button>
-          </div>
-          <p className="text-muted-foreground max-w-xl text-sm">
-            Typical flow: create an endpoint → copy its public URL into the provider’s
-            dashboard → send a test event → review the logged request below.
-          </p>
-        </header>
+      <div className="relative overflow-hidden">
+        <div className="relative mx-auto min-h-full max-w-6xl px-4 pt-10 pb-6 md:px-6 md:pt-14 md:pb-8">
+          <header className="space-y-8">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="bg-primary/12 text-primary ring-primary/25 flex size-12 items-center justify-center rounded-2xl ring-1 shadow-sm">
+                  <Webhook className="size-6" aria-hidden />
+                </span>
+                <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
+                  {APP_DISPLAY_NAME}
+                </p>
+              </div>
+              <div className="space-y-3">
+                <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl lg:text-[2.35rem] lg:leading-tight">
+                  Catch and inspect webhooks-right on this page
+                </h1>
+                <p className="text-muted-foreground max-w-2xl text-base leading-relaxed md:text-lg">
+                  Your catcher URLs, send-test tool, and request history are
+                  below. No extra navigation-bookmark this page and come back
+                  anytime.
+                </p>
+              </div>
+            </div>
 
-        <section className="space-y-6" aria-labelledby="foundations-heading">
-          <h2
-            id="foundations-heading"
-            className="font-heading text-lg font-medium tracking-tight"
-          >
-            What this site should cover
-          </h2>
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {foundations.map(({ icon: Icon, title, description }) => (
-              <li key={title}>
-                <Card className="h-full">
-                  <CardHeader className="pb-2">
-                    <Icon
-                      className="text-muted-foreground mb-2 size-5 shrink-0"
-                      aria-hidden
-                    />
-                    <CardTitle>{title}</CardTitle>
-                    <CardDescription className="text-pretty">
-                      {description}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        </section>
+            <ul className="grid gap-3 sm:grid-cols-3">
+              {steps.map(
+                ({ icon: Icon, title, description, iconWrap }, index) => (
+                  <li
+                    key={title}
+                    className="border-border/80 bg-card/60 supports-backdrop-filter:bg-card/50 flex gap-3 rounded-2xl border p-4 shadow-sm backdrop-blur-sm"
+                  >
+                    <span className="text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-background/80 text-xs font-bold tabular-nums shadow-xs">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={cn(
+                            "flex size-9 shrink-0 items-center justify-center rounded-xl ring-1",
+                            iconWrap,
+                          )}
+                        >
+                          <Icon className="size-4" aria-hidden />
+                        </span>
+                        <span className="text-sm font-semibold tracking-tight">
+                          {title}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-xs leading-snug">
+                        {description}
+                      </p>
+                    </div>
+                  </li>
+                ),
+              )}
+            </ul>
+          </header>
+        </div>
+      </div>
 
-        <section
-          className="border-border bg-muted/30 rounded-xl border p-6 md:p-8"
-          aria-labelledby="next-heading"
-        >
-          <h2
-            id="next-heading"
-            className="font-heading mb-3 text-lg font-medium tracking-tight"
-          >
-            Next pieces to implement
-          </h2>
-          <ol className="text-muted-foreground list-decimal space-y-2 pl-5 text-sm leading-relaxed">
-            <li>
-              HTTP handler (e.g.{" "}
-              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">
-                app/api/…
-              </code>
-              ) that accepts any method, resolves the endpoint id, and inserts into
-              D1.
-            </li>
-            <li>
-              Server actions under{" "}
-              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">
-                actions/webhooks
-              </code>{" "}
-              to create endpoints and list recent requests.
-            </li>
-            <li>
-              Workspace UI at{" "}
-              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">
-                /webhook
-              </code>{" "}
-              (deep links under{" "}
-              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">
-                /webhook/[publicSlug]/[secretToken]
-              </code>
-              ) — copy URLs, list requests, expand headers and body (sample traffic until
-              persistence ships).
-            </li>
-          </ol>
-        </section>
+      <div className="mx-auto max-w-6xl px-4 pb-10 md:px-6 md:pb-14">
+        <Separator className="mb-8 md:mb-10" />
+
+        <div id="workspace" className="scroll-mt-6">
+          <WebhookWorkspace
+            origin={origin}
+            routeBasePath="/"
+            showHeader={false}
+          />
+        </div>
       </div>
     </div>
   );

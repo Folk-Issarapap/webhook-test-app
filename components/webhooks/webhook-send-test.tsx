@@ -20,6 +20,7 @@ import {
   SEND_TEST_BODY_TEMPLATES,
   SEND_TEST_HEADER_TEMPLATES,
 } from "@/lib/webhooks/send-test-templates";
+import { getHttpMethodBadgeClass } from "@/lib/http-method-styles";
 import { cn } from "@/lib/utils";
 
 import { CopyTextButton } from "./copy-url-button";
@@ -203,7 +204,12 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             <div className="space-y-2">
               <Label>Method</Label>
               <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger className="w-[130px]">
+                <SelectTrigger
+                  className={cn(
+                    "w-[130px] bg-background font-mono font-semibold",
+                    getHttpMethodBadgeClass(method),
+                  )}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
