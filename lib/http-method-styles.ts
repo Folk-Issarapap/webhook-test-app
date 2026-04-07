@@ -2,6 +2,8 @@ const METHOD_BADGE: Record<string, string> = {
   GET: "border-sky-500/45 bg-sky-500/12 text-sky-900 dark:text-sky-100",
   POST:
     "border-emerald-500/45 bg-emerald-500/14 text-emerald-950 dark:text-emerald-100",
+  PUSH:
+    "border-emerald-500/45 bg-emerald-500/14 text-emerald-950 dark:text-emerald-100",
   PUT: "border-amber-500/45 bg-amber-500/12 text-amber-950 dark:text-amber-100",
   PATCH:
     "border-violet-500/45 bg-violet-500/12 text-violet-950 dark:text-violet-100",
@@ -15,6 +17,7 @@ const METHOD_BADGE: Record<string, string> = {
 const METHOD_ACCENT: Record<string, string> = {
   GET: "border-l-sky-500",
   POST: "border-l-emerald-500",
+  PUSH: "border-l-emerald-500",
   PUT: "border-l-amber-500",
   PATCH: "border-l-violet-500",
   DELETE: "border-l-rose-500",

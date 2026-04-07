@@ -1,32 +1,47 @@
 import { headers } from "next/headers";
-import { Inbox, Route, Webhook } from "lucide-react";
+import {
+  ArrowDown,
+  KeyRound,
+  Radio,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 
 import { WebhookWorkspace } from "@/components/webhooks/webhook-workspace";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { APP_DISPLAY_NAME } from "@/lib/site";
 import { resolveRequestOrigin } from "@/lib/server/request-origin";
+import { ICON_WELL_THEMES } from "@/lib/ui/icon-well-themes";
 import { cn } from "@/lib/utils";
 
-const steps = [
+/** Hero badge — fuchsia sparkle */
+const sparklesTheme = ICON_WELL_THEMES[6]!;
+/** Feature cards: sky → violet → emerald */
+const highlightThemes = [
+  ICON_WELL_THEMES[0],
+  ICON_WELL_THEMES[1],
+  ICON_WELL_THEMES[2],
+] as const;
+
+const highlights = [
   {
-    icon: Route,
-    title: "Copy URL",
-    description: "Grab the catcher URL from the panel below.",
-    iconWrap: "bg-sky-500/15 text-sky-600 ring-sky-500/25 dark:text-sky-300",
+    icon: Zap,
+    title: "Plain or secret URL",
+    description:
+      "Each endpoint has a public slug plus a secret token in the path—fine for providers that expect a signed-looking URL.",
   },
   {
-    icon: Inbox,
-    title: "Send traffic",
-    description: "Paste it in Bropay, GitHub, or curl.",
-    iconWrap:
-      "bg-violet-500/15 text-violet-600 ring-violet-500/25 dark:text-violet-300",
+    icon: Radio,
+    title: "Live request log",
+    description:
+      "See method, path, headers, and body as requests arrive. Expand a row to copy JSON or raw text.",
   },
   {
-    icon: Webhook,
-    title: "Inspect",
-    description: "Headers and body show up live.",
-    iconWrap:
-      "bg-emerald-500/15 text-emerald-600 ring-emerald-500/25 dark:text-emerald-300",
+    icon: ShieldCheck,
+    title: "No login",
+    description:
+      "Open the site and start testing. Your workspace is tied to this browser session-bookmark the page to return.",
   },
 ] as const;
 
@@ -36,70 +51,141 @@ export default async function Home() {
 
   return (
     <div className="bg-background text-foreground">
-      <div className="relative overflow-hidden">
-        <div className="relative mx-auto min-h-full max-w-6xl px-4 pt-10 pb-6 md:px-6 md:pt-14 md:pb-8">
-          <header className="space-y-8">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <span className="bg-primary/12 text-primary ring-primary/25 flex size-12 items-center justify-center rounded-2xl ring-1 shadow-sm">
-                  <Webhook className="size-6" aria-hidden />
-                </span>
-                <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
-                  {APP_DISPLAY_NAME}
-                </p>
-              </div>
-              <div className="space-y-3">
-                <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl lg:text-[2.35rem] lg:leading-tight">
-                  Catch and inspect webhooks-right on this page
-                </h1>
-                <p className="text-muted-foreground max-w-2xl text-base leading-relaxed md:text-lg">
-                  Your catcher URLs, send-test tool, and request history are
-                  below. No extra navigation-bookmark this page and come back
-                  anytime.
-                </p>
-              </div>
+      <div className="mx-auto max-w-6xl px-4 pt-12 pb-8 md:px-6 md:pt-16 md:pb-10">
+        <header className="text-center md:text-left">
+          <div className="mb-6 flex flex-col items-center gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="border-border inline-flex items-center gap-2.5 rounded-full border bg-card px-3 py-1.5 text-xs font-medium shadow-sm">
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-full",
+                  sparklesTheme.well,
+                )}
+                aria-hidden
+              >
+                <Sparkles className={cn("size-3.5", sparklesTheme.icon)} />
+              </span>
+              <span className="text-muted-foreground">
+                Public tool · No sign-up
+              </span>
             </div>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+            >
+              <a href="#workspace" className="gap-2 font-medium">
+                Jump to workspace
+                <ArrowDown
+                  className="text-muted-foreground size-3.5"
+                  aria-hidden
+                />
+              </a>
+            </Button>
+          </div>
 
-            <ul className="grid gap-3 sm:grid-cols-3">
-              {steps.map(
-                ({ icon: Icon, title, description, iconWrap }, index) => (
-                  <li
-                    key={title}
-                    className="border-border/80 bg-card/60 supports-backdrop-filter:bg-card/50 flex gap-3 rounded-2xl border p-4 shadow-sm backdrop-blur-sm"
-                  >
-                    <span className="text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-background/80 text-xs font-bold tabular-nums shadow-xs">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0 space-y-2">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className={cn(
-                            "flex size-9 shrink-0 items-center justify-center rounded-xl ring-1",
-                            iconWrap,
-                          )}
-                        >
-                          <Icon className="size-4" aria-hidden />
-                        </span>
-                        <span className="text-sm font-semibold tracking-tight">
-                          {title}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground text-xs leading-snug">
-                        {description}
-                      </p>
-                    </div>
-                  </li>
-                ),
-              )}
-            </ul>
-          </header>
-        </div>
+          <div className="mx-auto max-w-3xl space-y-5 md:mx-0">
+            <p className="text-muted-foreground font-mono text-[11px] font-semibold uppercase tracking-[0.22em]">
+              {APP_DISPLAY_NAME}
+            </p>
+            <h1 className="font-heading text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.65rem] md:leading-[1.12]">
+              Test webhooks in your browser-fast, clear, and ready for customers
+            </h1>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-pretty text-base leading-relaxed md:mx-0 md:text-lg">
+              Paste your ingest URL into your payment provider, GitHub, or curl.
+              We record the HTTP request so you can verify payloads, headers,
+              and signatures-whether the endpoint is a simple path or includes a
+              secret token.
+            </p>
+          </div>
+
+          <ol className="mt-10 grid gap-4 text-left sm:grid-cols-3">
+            {[
+              {
+                step: "1",
+                title: "Copy ingest URL",
+                body: "Pick an endpoint below and copy its ingest URL (secret is already in the path).",
+              },
+              {
+                step: "2",
+                title: "Trigger an event",
+                body: "Use your dashboard, CLI, or our Send test tab to hit the URL.",
+              },
+              {
+                step: "3",
+                title: "Inspect & debug",
+                body: "Open incoming requests, read headers and body, copy JSON.",
+              },
+            ].map(({ step, title, body }) => (
+              <li
+                key={step}
+                className="border-border relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm"
+              >
+                <span className="text-muted-foreground/25 font-heading absolute right-1 -top-0.5 text-5xl font-bold tabular-nums select-none">
+                  {step}
+                </span>
+                <p className="text-foreground font-semibold tracking-tight">
+                  {title}
+                </p>
+                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                  {body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </header>
+
+        <ul className="mt-10 grid gap-4 md:grid-cols-3">
+          {highlights.map(({ icon: Icon, title, description }, i) => {
+            const th = highlightThemes[i]!;
+            return (
+              <li
+                key={title}
+                className="border-border flex gap-4 rounded-2xl border bg-card p-5 shadow-sm"
+              >
+                <span
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-xl",
+                    th.well,
+                  )}
+                >
+                  <Icon className={cn("size-5", th.icon)} aria-hidden />
+                </span>
+                <div className="min-w-0 space-y-1.5">
+                  <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+                    {title}
+                    {title.includes("secret") ? (
+                      <KeyRound
+                        className="text-muted-foreground size-3.5 shrink-0"
+                        aria-hidden
+                      />
+                    ) : null}
+                  </p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {description}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 pb-10 md:px-6 md:pb-14">
-        <Separator className="mb-8 md:mb-10" />
+      <div
+        id="workspace"
+        className="border-border scroll-mt-8 border-t bg-background py-10 md:py-14"
+      >
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <div className="mb-8 md:mb-10">
+            <h2 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">
+              Your workspace
+            </h2>
+            <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
+              Follow the three steps in the panel—pick an endpoint, copy the URL
+              into your provider, then inspect traffic or send a test from here.
+            </p>
+          </div>
 
-        <div id="workspace" className="scroll-mt-6">
           <WebhookWorkspace
             origin={origin}
             routeBasePath="/"

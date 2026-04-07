@@ -162,10 +162,17 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
     ? JSON.stringify(result.headers, null, 2)
     : "";
   const responseBodyDisplay = result ? tryFormatJson(result.body) : "";
+  const responseMetaClass = result
+    ? result.status >= 200 && result.status < 300
+      ? "text-emerald-700 dark:text-emerald-300"
+      : result.status >= 300 && result.status < 400
+        ? "text-amber-700 dark:text-amber-300"
+        : "text-rose-700 dark:text-rose-300"
+    : "text-muted-foreground";
 
   return (
     <div className="space-y-8">
-      <div className="border-border bg-muted/30 rounded-xl border p-5 md:p-6">
+      <div className="border-border rounded-xl border bg-background p-5 md:p-6">
         <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
           Paste any webhook or HTTP URL. The request runs from this
           application&apos;s server so providers without browser CORS still
@@ -408,14 +415,14 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
 
       {result ? (
         <div
-          className="border-border bg-card rounded-xl border p-5 md:p-6"
+          className="border-border rounded-xl border bg-background p-5 md:p-6"
           aria-live="polite"
         >
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="font-heading text-base font-medium tracking-tight">
               Response
             </h3>
-            <span className="text-muted-foreground font-mono text-xs">
+            <span className={cn("font-mono text-xs", responseMetaClass)}>
               {result.durationMs} ms · HTTP {result.status}
               {result.statusText ? ` ${result.statusText}` : ""}
             </span>
@@ -429,7 +436,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 </p>
                 <CopyTextButton text={responseHeadersText} label="Copy" />
               </div>
-              <pre className="bg-muted/70 max-h-[min(20rem,40vh)] overflow-auto rounded-md p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+              <pre className="bg-muted/50 max-h-[min(20rem,40vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
                 {responseHeadersText || "—"}
               </pre>
             </div>
@@ -440,7 +447,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 </p>
                 <CopyTextButton text={responseBodyDisplay} label="Copy" />
               </div>
-              <pre className="bg-muted/70 max-h-[min(28rem,50vh)] overflow-auto rounded-md p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+              <pre className="bg-muted/50 max-h-[min(28rem,50vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
                 {responseBodyDisplay || "—"}
               </pre>
               {result.truncated ? (
