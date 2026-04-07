@@ -55,14 +55,18 @@ const clipboardIconTheme = ICON_WELL_THEMES[1]!;
 const endpointSelectedBorder =
   "border-emerald-500/50 dark:border-emerald-400/50";
 
-/** Segmented control: active = solid surface only (no extra border/shadow - avoids dark-mode double edge). */
+/** Segmented control: active tab gets a subtle violet border. */
 const tabTriggerClass = cn(
-  "min-h-11 flex-1 rounded-md px-3 py-2.5 text-center text-sm font-medium transition-colors",
-  "border-0 shadow-none outline-none ring-0",
+  "min-h-11 flex-1 rounded-lg px-3 py-2.5 text-center text-sm font-medium transition-colors",
+  "border border-transparent shadow-none outline-none ring-0",
   "after:hidden",
-  "text-muted-foreground hover:text-foreground",
+  "text-muted-foreground hover:bg-background/60 hover:text-foreground",
   "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold",
+  "data-[state=active]:border-violet-500/55 data-[state=active]:shadow-sm",
+  "dark:data-[state=active]:border-violet-400/45",
   "data-active:bg-background data-active:text-foreground data-active:font-semibold",
+  "data-active:border-violet-500/55 data-active:shadow-sm",
+  "dark:data-active:border-violet-400/45",
 );
 
 function tryFormatJson(raw: string | null): string {
@@ -96,7 +100,7 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
     <Collapsible open={open} onOpenChange={setOpen}>
       <div
         className={cn(
-          "border-border bg-background rounded-xl border border-l-4",
+          "border-border bg-background rounded-xl border border-l-4 ui-surface-shadow",
           getHttpMethodCardAccentClass(row.method),
         )}
       >
@@ -129,7 +133,7 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
                 <p className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wide">
                   Source
                 </p>
-                <div className="bg-muted/40 text-foreground/90 rounded-lg p-3 text-[13px] leading-relaxed">
+                <div className="ui-code-well text-foreground/90 rounded-lg p-3 text-[13px] leading-relaxed">
                   {row.source_note}
                 </div>
               </div>
@@ -141,7 +145,7 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
                 </p>
                 <CopyTextButton text={headersText} label="Copy" />
               </div>
-              <pre className="bg-muted/40 max-h-[min(28rem,55vh)] overflow-auto rounded-lg p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+              <pre className="ui-code-well max-h-[min(28rem,55vh)] overflow-auto rounded-lg p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
                 {headersText}
               </pre>
             </div>
@@ -152,7 +156,7 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
                 </p>
                 <CopyTextButton text={bodyText} label="Copy" />
               </div>
-              <pre className="bg-muted/40 max-h-[min(24rem,50vh)] overflow-auto rounded-lg p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+              <pre className="ui-code-well max-h-[min(24rem,50vh)] overflow-auto rounded-lg p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
                 {bodyText}
               </pre>
             </div>
@@ -221,7 +225,7 @@ function EndpointRequestList({ endpointId }: { endpointId: string }) {
 
   if (requests.length === 0) {
     return (
-      <div className="border-border text-muted-foreground rounded-xl border border-dashed bg-background px-5 py-14 text-center">
+      <div className="border-border text-muted-foreground ui-surface-shadow rounded-xl border border-dashed bg-background px-5 py-14 text-center">
         <p className="text-foreground text-sm font-medium">No requests yet</p>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed">
           Send HTTP traffic to the ingest URL above, or open the{" "}
@@ -335,7 +339,7 @@ export function WebhookWorkspace({
     <div className="bg-background text-foreground min-h-full">
       <div className={cn(showHeader ? "py-8 md:py-10" : "pb-0 pt-0")}>
         {showHeader ? (
-          <header className="border-border mb-8 rounded-xl border bg-background px-5 py-7 text-center md:px-6 md:text-left">
+          <header className="ui-surface mb-8 rounded-xl px-5 py-7 text-center md:px-6 md:text-left">
             <p className="text-muted-foreground mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.2em]">
               Webhook workspace
             </p>
@@ -343,8 +347,8 @@ export function WebhookWorkspace({
               Inspect and test HTTP webhooks
             </h1>
             <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-sm leading-relaxed md:mx-0">
-              Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} webhook endpoints in this
-              browser. Send traffic to the ingest URL and review captured
+              Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} webhook endpoints in
+              this browser. Send traffic to the ingest URL and review captured
               requests-in the spirit of{" "}
               <a
                 className="text-foreground font-medium underline-offset-4 hover:underline"
@@ -376,7 +380,7 @@ export function WebhookWorkspace({
               return (
                 <li
                   key={n}
-                  className="border-border flex gap-3 rounded-xl border bg-background px-3 py-3 md:px-4"
+                  className="ui-surface flex gap-3 rounded-xl px-3 py-3 md:px-4"
                 >
                   <span
                     className={cn(
@@ -429,7 +433,7 @@ export function WebhookWorkspace({
                 return (
                   <div
                     key={ep.id}
-                    className="flex max-w-full items-center gap-0.5 rounded-full border border-border bg-background p-0.5 pl-1"
+                    className="border-border flex max-w-full items-center gap-0.5 rounded-full border bg-background p-0.5 pl-1"
                   >
                     <Button
                       type="button"
@@ -503,7 +507,7 @@ export function WebhookWorkspace({
 
           <Tabs defaultValue="inspect" className="w-full">
             <div className="mb-6 flex w-full justify-center">
-              <TabsList className="border-border bg-muted flex h-auto w-full max-w-md gap-1 rounded-xl border p-1">
+              <TabsList className="border-border bg-muted/80 flex h-auto w-full max-w-md gap-1 rounded-xl border p-1 shadow-inner dark:bg-muted/60">
                 <TabsTrigger value="inspect" className={tabTriggerClass}>
                   Inspect
                 </TabsTrigger>
@@ -516,12 +520,13 @@ export function WebhookWorkspace({
             <TabsContent value="inspect" className="mt-0 space-y-6">
               {!selected ? (
                 <p className="text-muted-foreground text-sm">
-                  Select an endpoint above to see its ingest URL and request log.
+                  Select an endpoint above to see its ingest URL and request
+                  log.
                 </p>
               ) : (
                 <>
                   <section
-                    className="border-border rounded-xl border bg-card p-4 md:p-5"
+                    className="ui-surface rounded-xl p-4 md:p-5"
                     aria-label="Ingest URL for selected endpoint"
                   >
                     <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -550,7 +555,7 @@ export function WebhookWorkspace({
                       </div>
                       <CopyUrlButton url={ingestUrl} label="Copy URL" />
                     </div>
-                    <code className="border-border bg-background text-foreground block w-full rounded-lg border px-3 py-3 font-mono text-xs leading-relaxed break-all md:text-sm">
+                    <code className="ui-code-well text-foreground block w-full rounded-lg px-3 py-3 font-mono text-xs leading-relaxed break-all md:text-sm">
                       {ingestUrl}
                     </code>
                     <p className="text-muted-foreground mt-3 text-[11px] leading-relaxed">
@@ -576,7 +581,7 @@ export function WebhookWorkspace({
                     </div>
 
                     {loadError ? (
-                      <div className="border-border text-muted-foreground rounded-xl border border-dashed bg-background py-14 text-center text-sm">
+                      <div className="border-border text-muted-foreground ui-surface-shadow rounded-xl border border-dashed bg-background py-14 text-center text-sm">
                         Connect the database to see incoming requests.
                       </div>
                     ) : (

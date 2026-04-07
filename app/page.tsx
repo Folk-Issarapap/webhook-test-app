@@ -15,7 +15,7 @@ import { resolveRequestOrigin } from "@/lib/server/request-origin";
 import { ICON_WELL_THEMES } from "@/lib/ui/icon-well-themes";
 import { cn } from "@/lib/utils";
 
-/** Hero badge — fuchsia sparkle */
+/** Hero badge - fuchsia sparkle */
 const sparklesTheme = ICON_WELL_THEMES[6]!;
 /** Feature cards: sky → violet → emerald */
 const highlightThemes = [
@@ -29,7 +29,7 @@ const highlights = [
     icon: Zap,
     title: "Plain or secret URL",
     description:
-      "Each endpoint has a public slug plus a secret token in the path—fine for providers that expect a signed-looking URL.",
+      "Each endpoint has a public slug plus a secret token in the path-fine for providers that expect a signed-looking URL.",
   },
   {
     icon: Radio,
@@ -54,7 +54,7 @@ export default async function Home() {
       <div className="mx-auto max-w-6xl px-4 pt-12 pb-8 md:px-6 md:pt-16 md:pb-10">
         <header className="text-center md:text-left">
           <div className="mb-6 flex flex-col items-center gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="border-border inline-flex items-center gap-2.5 rounded-full border bg-card px-3 py-1.5 text-xs font-medium shadow-sm">
+            <div className="ui-surface inline-flex items-center gap-2.5 rounded-full px-3 py-1.5 text-xs font-medium">
               <span
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full",
@@ -119,9 +119,9 @@ export default async function Home() {
             ].map(({ step, title, body }) => (
               <li
                 key={step}
-                className="border-border relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm"
+                className="ui-surface relative overflow-hidden rounded-2xl p-5"
               >
-                <span className="text-muted-foreground/25 font-heading absolute right-1 -top-0.5 text-5xl font-bold tabular-nums select-none">
+                <span className="text-muted-foreground/25 font-heading absolute right-3 -top-0.5 text-5xl font-bold tabular-nums select-none">
                   {step}
                 </span>
                 <p className="text-foreground font-semibold tracking-tight">
@@ -139,10 +139,7 @@ export default async function Home() {
           {highlights.map(({ icon: Icon, title, description }, i) => {
             const th = highlightThemes[i]!;
             return (
-              <li
-                key={title}
-                className="border-border flex gap-4 rounded-2xl border bg-card p-5 shadow-sm"
-              >
+              <li key={title} className="ui-surface flex gap-4 rounded-2xl p-5">
                 <span
                   className={cn(
                     "flex size-11 shrink-0 items-center justify-center rounded-xl",
@@ -181,7 +178,7 @@ export default async function Home() {
               Your workspace
             </h2>
             <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-              Follow the three steps in the panel—pick an endpoint, copy the URL
+              Follow the three steps in the panel-pick an endpoint, copy the URL
               into your provider, then inspect traffic or send a test from here.
             </p>
           </div>

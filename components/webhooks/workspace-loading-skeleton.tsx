@@ -13,7 +13,7 @@ export function WorkspaceLoadingSkeleton() {
         {[0, 1, 2].map((i) => (
           <li
             key={i}
-            className="border-border flex gap-3 rounded-xl border bg-background px-3 py-3 md:px-4"
+            className="ui-surface flex gap-3 rounded-xl px-3 py-3 md:px-4"
           >
             <Skeleton className="size-8 shrink-0 rounded-full" />
             <div className="min-w-0 flex-1 space-y-2 pt-0.5">
@@ -44,7 +44,7 @@ export function WorkspaceLoadingSkeleton() {
         </div>
       </div>
 
-      <div className="border-border space-y-4 rounded-xl border bg-background p-4 md:p-5">
+      <div className="ui-surface space-y-4 rounded-xl p-4 md:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex gap-3">
             <Skeleton className="mt-0.5 size-9 shrink-0 rounded-lg" />

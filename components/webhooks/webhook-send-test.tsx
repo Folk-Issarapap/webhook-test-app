@@ -172,7 +172,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
 
   return (
     <div className="space-y-8">
-      <div className="border-border rounded-xl border bg-background p-5 md:p-6">
+      <div className="ui-surface rounded-xl p-5 md:p-6">
         <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
           Paste any webhook or HTTP URL. The request runs from this
           application&apos;s server so providers without browser CORS still
@@ -415,7 +415,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
 
       {result ? (
         <div
-          className="border-border rounded-xl border bg-background p-5 md:p-6"
+          className="ui-surface rounded-xl p-5 md:p-6"
           aria-live="polite"
         >
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
@@ -436,7 +436,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 </p>
                 <CopyTextButton text={responseHeadersText} label="Copy" />
               </div>
-              <pre className="bg-muted/50 max-h-[min(20rem,40vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+              <pre className="ui-code-well max-h-[min(20rem,40vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
                 {responseHeadersText || "—"}
               </pre>
             </div>
@@ -447,7 +447,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 </p>
                 <CopyTextButton text={responseBodyDisplay} label="Copy" />
               </div>
-              <pre className="bg-muted/50 max-h-[min(28rem,50vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+              <pre className="ui-code-well max-h-[min(28rem,50vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
                 {responseBodyDisplay || "—"}
               </pre>
               {result.truncated ? (
