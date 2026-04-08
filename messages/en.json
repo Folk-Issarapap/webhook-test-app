@@ -3,12 +3,12 @@
     "copy": "Copy",
     "copied": "Copied",
     "copyUrl": "Copy URL",
-    "dash": "—"
+    "dash": "-"
   },
   "site": {
     "title": "Webhook Workspace",
-    "description": "Free public webhook tester: capture HTTP requests, inspect headers and body, and try signed URLs with a secret in the path—no account required.",
-    "footerTagline": "is a free, public webhook tester: capture requests, inspect headers and body, and try URLs with a secret in the path. No account—open the page and go."
+    "description": "Free public webhook tester: capture HTTP requests, inspect headers and body, and try signed URLs with a secret in the path-no account required.",
+    "footerTagline": "is a free, public webhook tester: capture requests, inspect headers and body, and try URLs with a secret in the path. No account-open the page and go."
   },
   "language": {
     "label": "Language",
@@ -32,7 +32,7 @@
     "live": "Live",
     "offline": "Offline",
     "selectWebhook": "Select a webhook above.",
-    "dbUnavailable": "Database unavailable — requests not loaded.",
+    "dbUnavailable": "Database unavailable - requests not loaded.",
     "noRequestsYet": "No requests yet. Send traffic to the webhook URL or open",
     "sendTest": "Send test",
     "traffic": "Traffic",
@@ -51,13 +51,13 @@
   "trafficGuide": {
     "badge": "Public · No account · Free",
     "title": "Test webhooks in the browser",
-    "intro": "Copy your webhook URL into your provider or curl. We capture the HTTP request so you can verify payloads and headers—plain path or a secret in the URL.",
+    "intro": "Copy your webhook URL into your provider or curl. We capture the HTTP request so you can verify payloads and headers-plain path or a secret in the URL.",
     "highlight1Title": "Plain or secret URL",
-    "highlight1Desc": "Public slug plus a secret token in the path—works with providers that expect a signed-looking URL.",
+    "highlight1Desc": "Public slug plus a secret token in the path-works with providers that expect a signed-looking URL.",
     "highlight2Title": "Live request log",
     "highlight2Desc": "Method, path, headers, and body as requests arrive. Select a row to inspect or copy JSON.",
     "highlight3Title": "No login",
-    "highlight3Desc": "Open the site and start testing. This browser session is your workspace—bookmark to return."
+    "highlight3Desc": "Open the site and start testing. This browser session is your workspace-bookmark to return."
   },
   "sendTest": {
     "serverHintBefore": "The request runs from this app's server (helps with providers that block browser CORS).",
@@ -84,7 +84,7 @@
     "errHeadersJson": "Headers must be valid JSON.",
     "errInvalidResponse": "Invalid response from server.",
     "errUnexpected": "Unexpected response from server.",
-    "errNetwork": "Network error — could not reach the test endpoint.",
+    "errNetwork": "Network error - could not reach the test endpoint.",
     "response": "Response",
     "responseHeaders": "Response headers",
     "responseBody": "Response body",
