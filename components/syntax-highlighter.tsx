@@ -131,3 +131,75 @@ export function JsonDisplay({ data, className }: JsonDisplayProps) {
     </pre>
   );
 }
+
+// Simple inline JSON display without border (for compact layouts)
+// Shows flat key-value pairs with syntax highlighting for simple objects
+export function SimpleJsonDisplay({
+  data,
+}: {
+  data: Record<string, unknown> | unknown[];
+}) {
+  // For arrays, use standard SyntaxHighlighter
+  if (Array.isArray(data)) {
+    return <SyntaxHighlighter data={data} />;
+  }
+
+  const entries = Object.entries(data);
+
+  if (entries.length === 0) {
+    return <span>{"{}"}</span>;
+  }
+
+  // Check if object is simple (no nested objects or arrays)
+  const isSimpleObject = entries.every(([, value]) => {
+    if (value === null) return true;
+    const type = typeof value;
+    return type === "string" || type === "number" || type === "boolean";
+  });
+
+  // For nested objects, use standard SyntaxHighlighter
+  if (!isSimpleObject) {
+    return <SyntaxHighlighter data={data} />;
+  }
+
+  // For simple flat objects, show as key-value pairs with JSON braces
+  return (
+    <div className="font-mono text-sm">
+      <span className="text-muted-foreground">{"{"}</span>
+      <div className="space-y-1 pl-2">
+        {entries.map(([key, value], index) => (
+          <div key={key} className="flex gap-2 items-start">
+            <span className="syntax-key">&quot;{key}&quot;</span>
+            <span className="text-muted-foreground">:</span>
+            <ValueDisplay value={value} />
+            {index < entries.length - 1 && (
+              <span className="text-muted-foreground">,</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <span className="text-muted-foreground">{"}"}</span>
+    </div>
+  );
+}
+
+// Helper to display values with proper syntax highlighting
+function ValueDisplay({ value }: { value: unknown }) {
+  if (value === null) {
+    return <span className="syntax-null">null</span>;
+  }
+
+  if (typeof value === "string") {
+    return <span className="syntax-string">&quot;{value}&quot;</span>;
+  }
+
+  if (typeof value === "number") {
+    return <span className="syntax-number">{value}</span>;
+  }
+
+  if (typeof value === "boolean") {
+    return <span className="syntax-boolean">{String(value)}</span>;
+  }
+
+  return <span className="syntax-string">{String(value)}</span>;
+}

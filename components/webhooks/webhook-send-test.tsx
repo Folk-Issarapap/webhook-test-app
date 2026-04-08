@@ -24,6 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { KeyValueInput } from "@/components/key-value-input";
 import { JsonDisplay } from "@/components/syntax-highlighter";
+import { Badge } from "@/components/ui/badge";
 
 type TestWebhookSuccess = {
   ok: boolean;
@@ -147,7 +148,6 @@ function DataPanel({
     return (
       <div className="rounded-2xl border border-border-subtle bg-surface p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Icon className="size-4 text-muted-foreground" />
           <span className="text-sm font-medium">{title}</span>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -158,13 +158,12 @@ function DataPanel({
   }
 
   return (
-    <div className="rounded-2xl border border-border-subtle bg-surface overflow-hidden">
+    <div className="rounded-2xl border border-border-subtle overflow-hidden">
       <div className="flex items-center justify-between gap-3 p-4 border-b border-border-subtle">
         <div className="flex items-center gap-2">
-          <Icon className="size-4 text-muted-foreground" />
           <span className="text-sm font-medium">{title}</span>
         </div>
-        <div className="flex items-center gap-1 bg-surface rounded-lg p-0.5 border border-border-subtle">
+        <div className="flex items-center gap-1 bg-surface rounded-lg p-0.5 ">
           <ToggleButton
             active={mode === "keyvalue"}
             onClick={() => handleToggle("keyvalue")}
@@ -219,7 +218,7 @@ function DataPanel({
                 </table>
               </div>
             ) : (
-              <div className="rounded-xl border border-border-subtle bg-background p-3">
+              <div className="">
                 <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
                   JSON Preview
                 </p>
@@ -230,14 +229,13 @@ function DataPanel({
             )}
           </div>
         ) : (
-          <div className="rounded-xl border border-border-subtle bg-background overflow-hidden">
-            <div className="px-3 py-2 border-b border-border-subtle bg-surface/50">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Custom JSON
-              </p>
-            </div>
+          <div className="space-y-2 overflow-hidden">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Custom JSON
+            </p>
+
             <Textarea
-              className="font-mono text-sm min-h-[220px] bg-transparent border-0 rounded-none resize-none focus-visible:ring-0 focus-visible:ring-offset-0 leading-relaxed p-3"
+              className="rounded-lg font-mono text-sm min-h-[220px] bg-transparent border-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 leading-relaxed p-3"
               value={jsonValue}
               onChange={(e) => onJsonChange(e.target.value)}
               spellCheck={false}
@@ -272,13 +270,25 @@ function ResponsePanel({
     }
   }, [result.body]);
 
+  // Get badge variant based on status code
+  const getStatusVariant = (status: number) => {
+    if (status >= 200 && status < 300) return "default"; // Green/success
+    if (status >= 300 && status < 400) return "secondary"; // Blue/redirect
+    if (status >= 400 && status < 500) return "outline"; // Orange/client error
+    if (status >= 500) return "destructive"; // Red/server error
+    return "outline";
+  };
+
   return (
-    <div className="rounded-2xl border border-border-subtle bg-surface overflow-hidden">
+    <div className="overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-border-subtle">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium">Response</span>
-          <span className="text-xs font-mono text-muted-foreground">
-            {result.durationMs}ms · HTTP {result.status}
+          <Badge variant={getStatusVariant(result.status)}>
+            {result.status}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {result.durationMs}ms
           </span>
         </div>
         <button
@@ -306,7 +316,7 @@ function ResponsePanel({
               {copiedHeaders ? "Copied" : "Copy"}
             </button>
           </div>
-          <div className="rounded-xl border border-border-subtle bg-background p-3 max-h-[300px] overflow-auto">
+          <div className="max-h-[300px] overflow-auto">
             <div className="text-xs">
               <JsonDisplay data={result.headers} />
             </div>
@@ -329,7 +339,7 @@ function ResponsePanel({
               {copiedBody ? "Copied" : "Copy"}
             </button>
           </div>
-          <div className="rounded-xl border border-border-subtle bg-background p-3 max-h-[300px] overflow-auto">
+          <div className="max-h-[300px] overflow-auto">
             {bodyData ? (
               <div className="text-xs">
                 <JsonDisplay data={bodyData} />
@@ -458,9 +468,9 @@ export function WebhookSendTest({
   return (
     <div className="space-y-6">
       {/* URL Bar */}
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3 py-4">
         <Select value={method} onValueChange={setMethod}>
-          <SelectTrigger className="w-[100px] bg-background border-border-subtle font-medium">
+          <SelectTrigger className="w-[100px] font-medium">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
