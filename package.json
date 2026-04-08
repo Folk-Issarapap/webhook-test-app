@@ -10,12 +10,18 @@
     "build:next": "next build",
     "start:next": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler --config d1.wrangler.jsonc d1 migrations apply webhook-test-db --local",
     "db:migrate:remote": "wrangler --config d1.wrangler.jsonc d1 migrations apply webhook-test-db --remote",
     "cf-types": "wrangler types --config wrangler.jsonc",
     "deploy:workers": "pnpm run build && pnpm exec wrangler deploy",
     "deploy:workers:preview": "pnpm run build && pnpm exec wrangler deploy --env preview",
-    "test:r2": "node ./scripts/test-r2-connection.mjs"
+    "test:r2": "node ./scripts/test-r2-connection.mjs",
+    "test:core": "node ./scripts/test-core.mjs",
+    "test:repo": "node ./scripts/test-repository.mjs",
+    "test:state": "node ./scripts/test-workspace-state.mjs",
+    "test:integration": "node ./scripts/test-integration.mjs",
+    "test:all": "node ./scripts/test-core.mjs && node ./scripts/test-repository.mjs && node ./scripts/test-workspace-state.mjs && node ./scripts/test-integration.mjs && echo 'All tests passed!'"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

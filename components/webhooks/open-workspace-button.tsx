@@ -2,6 +2,7 @@
 
 import type { ComponentProps } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,7 @@ type OpenWorkspaceButtonProps = {
 export function OpenWorkspaceButton({
   size = "lg",
   className,
-  children = "Open webhook workspace",
+  children = "Create your endpoint",
 }: OpenWorkspaceButtonProps) {
   const router = useRouter();
 
@@ -23,12 +24,18 @@ export function OpenWorkspaceButton({
     <Button
       type="button"
       size={size}
-      className={className}
+      className={
+        className ??
+        "bg-primary text-primary-foreground hover:bg-primary-hover " +
+          "shadow-sm hover:shadow-md transition-all duration-200 " +
+          "font-medium px-6"
+      }
       onClick={() => {
         router.push("/webhook");
       }}
     >
       {children}
+      <ArrowRight className="ml-2 w-4 h-4" />
     </Button>
   );
 }

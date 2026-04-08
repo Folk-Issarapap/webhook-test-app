@@ -28,18 +28,19 @@ export function CopyUrlButton({ url, label = "Copy URL" }: CopyUrlButtonProps) {
       type="button"
       variant="ghost"
       size="sm"
-      className="shrink-0 gap-2 font-mono text-xs"
+      className="shrink-0 gap-2 text-xs text-primary hover:text-primary-hover 
+                 hover:bg-primary-subtle/30 transition-colors"
       onClick={handleCopy}
     >
       {copied ? (
         <>
           <Check className="size-3.5" aria-hidden />
-      
+          Copied
         </>
       ) : (
         <>
           <Copy className="size-3.5" aria-hidden />
-       
+          {label}
         </>
       )}
     </Button>
@@ -70,7 +71,8 @@ export function CopyTextButton({ text, label = "Copy" }: CopyTextButtonProps) {
       type="button"
       variant="ghost"
       size="sm"
-      className="text-muted-foreground hover:text-foreground h-7 shrink-0 gap-1 px-2 text-[11px]"
+      className="text-muted-foreground hover:text-foreground hover:bg-surface 
+                 h-7 shrink-0 gap-1 px-2 text-[11px] transition-colors"
       onClick={(e) => {
         e.stopPropagation();
         void handleCopy();
