@@ -164,15 +164,15 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
   const responseBodyDisplay = result ? tryFormatJson(result.body) : "";
   const responseMetaClass = result
     ? result.status >= 200 && result.status < 300
-      ? "text-emerald-700 dark:text-emerald-300"
+      ? "text-zinc-700 dark:text-zinc-300"
       : result.status >= 300 && result.status < 400
-        ? "text-amber-700 dark:text-amber-300"
-        : "text-rose-700 dark:text-rose-300"
+        ? "text-zinc-600 dark:text-zinc-400"
+        : "text-zinc-900 dark:text-zinc-100"
     : "text-muted-foreground";
 
   return (
     <div className="space-y-8">
-      <div className="ui-surface rounded-xl p-5 md:p-6">
+      <div className="rounded-2xl border border-zinc-200/50 bg-white/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] md:p-8 dark:border-zinc-800/50 dark:bg-zinc-950/25 dark:shadow-none">
         <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
           Paste any webhook or HTTP URL. The request runs from this
           application&apos;s server so providers without browser CORS still
@@ -198,7 +198,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             </div>
             <Input
               id="test-webhook-url"
-              className="font-mono text-sm"
+              className="rounded-xl border-zinc-200/70 font-mono text-sm transition-colors duration-200 focus-visible:border-zinc-400 dark:border-zinc-800/80"
               placeholder="https://example.com/webhook"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -230,7 +230,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             </div>
             <Button
               type="button"
-              className="gap-2"
+              className="gap-2 rounded-full bg-zinc-900 px-5 text-sm font-medium text-white transition-all duration-200 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
               disabled={loading || !url.trim()}
               onClick={() => void send()}
             >
@@ -246,11 +246,11 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
           <div className="space-y-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Label htmlFor="test-headers">Headers (JSON object)</Label>
-              <div className="bg-muted/60 flex shrink-0 rounded-lg p-0.5">
+              <div className="flex shrink-0 rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-900/50">
                 <button
                   type="button"
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-200",
                     headersMode === "custom"
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground",
@@ -262,7 +262,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 <button
                   type="button"
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-200",
                     headersMode === "template"
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground",
@@ -306,8 +306,9 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             <Textarea
               id="test-headers"
               className={cn(
-                "font-mono text-xs min-h-[100px]",
-                headersMode === "template" && "bg-muted/40 text-muted-foreground",
+                "min-h-[100px] rounded-xl border-zinc-200/70 font-mono text-xs transition-colors duration-200 focus-visible:border-zinc-400 dark:border-zinc-800/80",
+                headersMode === "template" &&
+                  "bg-zinc-50/80 text-muted-foreground dark:bg-zinc-900/40",
               )}
               value={headersText}
               readOnly={headersMode === "template"}
@@ -326,11 +327,11 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             <div className="space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Label htmlFor="test-body">Body</Label>
-                <div className="bg-muted/60 flex shrink-0 rounded-lg p-0.5">
+                <div className="flex shrink-0 rounded-lg bg-zinc-100/80 p-0.5 dark:bg-zinc-900/50">
                   <button
                     type="button"
                     className={cn(
-                      "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                      "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-200",
                       bodyMode === "custom"
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -342,7 +343,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                   <button
                     type="button"
                     className={cn(
-                      "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                      "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-200",
                       bodyMode === "template"
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -384,8 +385,9 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
               <Textarea
                 id="test-body"
                 className={cn(
-                  "font-mono text-xs min-h-[140px]",
-                  bodyMode === "template" && "bg-muted/40 text-muted-foreground",
+                  "min-h-[140px] rounded-xl border-zinc-200/70 font-mono text-xs transition-colors duration-200 focus-visible:border-zinc-400 dark:border-zinc-800/80",
+                  bodyMode === "template" &&
+                    "bg-zinc-50/80 text-muted-foreground dark:bg-zinc-900/40",
                 )}
                 value={body}
                 readOnly={bodyMode === "template"}
@@ -415,7 +417,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
 
       {result ? (
         <div
-          className="ui-surface rounded-xl p-5 md:p-6"
+          className="rounded-2xl border border-zinc-200/50 bg-white/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] md:p-8 dark:border-zinc-800/50 dark:bg-zinc-950/25 dark:shadow-none"
           aria-live="polite"
         >
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">

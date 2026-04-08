@@ -1,16 +1,9 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import {
-  ChevronDown,
-  ChevronRight,
-  ClipboardCopy,
-  Plus,
-  Radio,
-  Trash2,
-} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   attachEndpointByTokensAction,
@@ -21,52 +14,37 @@ import {
 } from "@/actions/webhooks/workspace-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  getHttpMethodBadgeClass,
-  getHttpMethodCardAccentClass,
-} from "@/lib/http-method-styles";
+import { getHttpMethodBadgeClass } from "@/lib/http-method-styles";
+import { cn } from "@/lib/utils";
 import { MAX_ENDPOINTS_PER_WORKSPACE } from "@/lib/webhooks/constants";
 import { isValidWorkspacePair } from "@/lib/webhooks/workspace-storage";
-import { buildIngestUrl, buildWorkspaceAppPath } from "@/lib/webhooks/urls";
-import { ICON_WELL_THEMES } from "@/lib/ui/icon-well-themes";
+import { buildIngestUrl } from "@/lib/webhooks/urls";
 import type { WebhookRequestRow } from "@/schemas/webhook";
 
 import { CopyTextButton, CopyUrlButton } from "./copy-url-button";
 import { WebhookSendTest } from "./webhook-send-test";
 import { WorkspaceLoadingSkeleton } from "./workspace-loading-skeleton";
 
-/** Steps 1–3: amber → rose → cyan */
-const stepIconThemes = [
-  ICON_WELL_THEMES[3],
-  ICON_WELL_THEMES[4],
-  ICON_WELL_THEMES[5],
-] as const;
-const radioIconTheme = ICON_WELL_THEMES[2]!;
-const clipboardIconTheme = ICON_WELL_THEMES[1]!;
-
-/** Selected endpoint pill — same hue as Endpoints header / Radio (emerald). */
-const endpointSelectedBorder =
-  "border-emerald-500/50 dark:border-emerald-400/50";
-
-/** Segmented control: active tab gets a subtle violet border. */
+/** Tabs: line style — inactive fades, active bold + visible underline (see ui/tabs ::after). */
 const tabTriggerClass = cn(
-  "min-h-11 flex-1 rounded-lg px-3 py-2.5 text-center text-sm font-medium transition-colors",
-  "border border-transparent shadow-none outline-none ring-0",
-  "after:hidden",
-  "text-muted-foreground hover:bg-background/60 hover:text-foreground",
-  "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:font-semibold",
-  "data-[state=active]:border-violet-500/55 data-[state=active]:shadow-sm",
-  "dark:data-[state=active]:border-violet-400/45",
-  "data-active:bg-background data-active:text-foreground data-active:font-semibold",
-  "data-active:border-violet-500/55 data-active:shadow-sm",
-  "dark:data-active:border-violet-400/45",
+  "relative flex-none rounded-none px-0.5 py-2.5 text-sm font-medium transition-colors duration-200",
+  "border-0 bg-transparent shadow-none ring-0 outline-none",
+  "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200",
+  "data-[state=active]:text-zinc-950 data-[state=active]:font-semibold dark:data-[state=active]:text-zinc-50",
+  // Ensure Radix `data-state=active` drives the line indicator (tabs.tsx uses `data-active` in some slots)
+  "data-[state=active]:after:opacity-100",
+  // Stronger, slightly thicker indicator than default 0.5 — reads clearly on off-white
+  "after:bottom-[-1px] after:h-[3px] after:rounded-full after:bg-zinc-900 after:opacity-0 dark:after:bg-zinc-100",
 );
 
 function tryFormatJson(raw: string | null): string {
@@ -88,28 +66,73 @@ function tryFormatHeadersJson(raw: string): string {
   }
 }
 
-function RequestCard({ row }: { row: WebhookRequestRow }) {
-  const [open, setOpen] = useState(false);
+function parseHeadersToEntries(raw: string): {
+  entries: [string, string][];
+  rawFallback: string | null;
+} {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const entries = Object.entries(parsed as Record<string, unknown>).map(
+        ([k, v]) =>
+          [k, typeof v === "string" ? v : JSON.stringify(v)] as [
+            string,
+            string,
+          ],
+      );
+      return { entries, rawFallback: null };
+    }
+  } catch {
+    /* use raw */
+  }
+  return { entries: [], rawFallback: raw };
+}
+
+function shortRequestId(id: string): string {
+  const alphanumeric = id.replace(/[^a-zA-Z0-9]/g, "");
+  if (alphanumeric.length >= 6) return alphanumeric.slice(0, 6);
+  return id.length > 8 ? `${id.slice(0, 8)}…` : id;
+}
+
+function RequestDetailPanel({
+  row,
+  ingestUrl,
+}: {
+  row: WebhookRequestRow;
+  ingestUrl: string;
+}) {
   const headersText = useMemo(
     () => tryFormatHeadersJson(row.headers),
     [row.headers],
   );
   const bodyText = useMemo(() => tryFormatJson(row.body), [row.body]);
+  const { entries: headerEntries, rawFallback } = useMemo(
+    () => parseHeadersToEntries(row.headers),
+    [row.headers],
+  );
+
+  const receivedAt = useMemo(
+    () => new Date(row.created_at * 1000),
+    [row.created_at],
+  );
+
+  const pathDisplay = row.path || "/";
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <div
-        className={cn(
-          "border-border bg-background rounded-xl border border-l-4 ui-surface-shadow",
-          getHttpMethodCardAccentClass(row.method),
-        )}
-      >
-        <CollapsibleTrigger className="hover:bg-muted/40 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors md:px-4 md:py-3.5">
-          {open ? (
-            <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-          ) : (
-            <ChevronRight className="text-muted-foreground size-4 shrink-0" />
-          )}
+    <div className="flex min-h-0 min-w-0 flex-col gap-4">
+      <div className="min-w-0">
+        <div className="border-border mb-3 border-b pb-3">
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-muted-foreground text-xs font-medium">
+              Ingest URL
+            </span>
+            <CopyUrlButton url={ingestUrl} label="Copy" />
+          </div>
+          <code className="ui-code-well text-foreground block w-full rounded-md px-2.5 py-2 font-mono text-[11px] leading-relaxed break-all md:text-xs">
+            {ingestUrl}
+          </code>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="outline"
             className={cn(
@@ -119,51 +142,72 @@ function RequestCard({ row }: { row: WebhookRequestRow }) {
           >
             {row.method}
           </Badge>
-          <span className="text-muted-foreground text-xs whitespace-nowrap">
-            {formatDistanceToNow(row.created_at * 1000, { addSuffix: true })}
-          </span>
-          <span className="text-muted-foreground min-w-0 flex-1 truncate font-mono text-xs">
-            {row.path}
-          </span>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="border-border space-y-3 border-t px-3 py-4 md:px-4">
-            {row.source_note ? (
-              <div>
-                <p className="text-muted-foreground mb-1.5 text-[11px] font-semibold uppercase tracking-wide">
-                  Source
-                </p>
-                <div className="ui-code-well text-foreground/90 rounded-lg p-3 text-[13px] leading-relaxed">
-                  {row.source_note}
-                </div>
-              </div>
-            ) : null}
-            <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
-                  Headers
-                </p>
-                <CopyTextButton text={headersText} label="Copy" />
-              </div>
-              <pre className="ui-code-well max-h-[min(28rem,55vh)] overflow-auto rounded-lg p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
-                {headersText}
-              </pre>
-            </div>
-            <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
-                  Body
-                </p>
-                <CopyTextButton text={bodyText} label="Copy" />
-              </div>
-              <pre className="ui-code-well max-h-[min(24rem,50vh)] overflow-auto rounded-lg p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
-                {bodyText}
-              </pre>
-            </div>
-          </div>
-        </CollapsibleContent>
+          <h2 className="text-foreground min-w-0 break-all font-mono text-base font-semibold tracking-tight md:text-lg">
+            {pathDisplay}
+          </h2>
+        </div>
+        {row.source_note ? (
+          <p className="text-muted-foreground mt-1.5 text-xs md:text-sm">
+            {row.source_note}
+          </p>
+        ) : (
+          <p className="text-muted-foreground mt-1.5 text-xs md:text-sm">
+            <time dateTime={receivedAt.toISOString()}>
+              {formatDistanceToNow(receivedAt, { addSuffix: true })}
+            </time>
+          </p>
+        )}
+        <p className="text-muted-foreground/90 mt-1 font-mono text-[11px] break-all">
+          {row.id}
+        </p>
       </div>
-    </Collapsible>
+
+      <Card size="sm" className="shadow-none">
+        <CardHeader className="border-border flex flex-row items-center justify-between space-y-0 border-b pb-3">
+          <CardTitle className="text-base font-medium">Headers</CardTitle>
+          <CopyTextButton text={headersText} label="Copy" />
+        </CardHeader>
+        <CardContent className="pt-3">
+          {rawFallback ? (
+            <pre className="ui-code-well max-h-[min(20rem,40vh)] overflow-auto rounded-lg p-3.5 font-mono text-sm leading-relaxed break-all whitespace-pre-wrap md:text-[15px] md:leading-[1.55]">
+              {rawFallback}
+            </pre>
+          ) : (
+            <div className="max-h-[min(20rem,40vh)] overflow-auto rounded-md border border-border/80">
+              <Table>
+                <TableBody>
+                  {headerEntries.map(([name, value]) => (
+                    <TableRow
+                      key={name}
+                      className="border-border/80 hover:bg-muted/40"
+                    >
+                      <TableCell className="text-muted-foreground max-w-[40%] py-2 align-top font-mono text-sm font-medium break-all whitespace-normal md:text-[15px]">
+                        {name}
+                      </TableCell>
+                      <TableCell className="py-2 align-top font-mono text-sm break-all whitespace-normal md:text-[15px] md:leading-snug">
+                        {value}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card size="sm" className="shadow-none">
+        <CardHeader className="border-border flex flex-row items-center justify-between space-y-0 border-b pb-3">
+          <CardTitle className="text-base font-medium">Body</CardTitle>
+          <CopyTextButton text={bodyText} label="Copy" />
+        </CardHeader>
+        <CardContent className="pt-3">
+          <pre className="ui-code-well max-h-[min(28rem,50vh)] overflow-auto rounded-lg p-3.5 font-mono text-sm leading-relaxed break-all whitespace-pre-wrap md:text-[15px] md:leading-[1.55]">
+            {bodyText}
+          </pre>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -175,33 +219,49 @@ type WebhookWorkspaceProps = {
   showHeader?: boolean;
 };
 
-const WORKSPACE_STEPS = [
-  {
-    n: "1",
-    title: "Pick an endpoint",
-    hint: "Tap a name below",
-  },
-  {
-    n: "2",
-    title: "Copy the ingest URL",
-    hint: "Use the box in Inspect",
-  },
-  {
-    n: "3",
-    title: "Watch traffic or send a test",
-    hint: "Inspect tab or Send test",
-  },
-] as const;
+type EndpointRequestInspectorProps = {
+  endpoints: WorkspaceEndpointDto[];
+  selectedEndpointId: string;
+  onSelectEndpoint: (id: string) => void;
+  ingestUrl: string;
+  canAdd: boolean;
+  canDelete: boolean;
+  addDisabled: boolean;
+  onAddEndpoint: () => void;
+  onDeleteEndpoint: () => void;
+};
 
-function EndpointRequestList({ endpointId }: { endpointId: string }) {
+function EndpointRequestInspector({
+  endpoints,
+  selectedEndpointId,
+  onSelectEndpoint,
+  ingestUrl,
+  canAdd,
+  canDelete,
+  addDisabled,
+  onAddEndpoint,
+  onDeleteEndpoint,
+}: EndpointRequestInspectorProps) {
   const [requests, setRequests] = useState<WebhookRequestRow[]>([]);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
+    null,
+  );
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const isFirstLoadRef = useRef(true);
+  const [enterIds, setEnterIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    isFirstLoadRef.current = true;
+    seenIdsRef.current = new Set();
+    setEnterIds(new Set());
+  }, [selectedEndpointId]);
 
   useEffect(() => {
     let cancelled = false;
     const tick = async () => {
       try {
         const res = await fetch(
-          `/api/workspace-endpoints/${encodeURIComponent(endpointId)}/requests`,
+          `/api/workspace-endpoints/${encodeURIComponent(selectedEndpointId)}/requests`,
           { credentials: "same-origin" },
         );
         if (!res.ok || cancelled) return;
@@ -221,28 +281,174 @@ function EndpointRequestList({ endpointId }: { endpointId: string }) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [endpointId]);
+  }, [selectedEndpointId]);
 
-  if (requests.length === 0) {
-    return (
-      <div className="border-border text-muted-foreground ui-surface-shadow rounded-xl border border-dashed bg-background px-5 py-14 text-center">
-        <p className="text-foreground text-sm font-medium">No requests yet</p>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed">
-          Send HTTP traffic to the ingest URL above, or open the{" "}
-          <span className="text-foreground font-medium">Send test</span> tab.
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      if (requests.length === 0) {
+        setSelectedRequestId(null);
+        return;
+      }
+      setSelectedRequestId((prev) => {
+        if (prev && requests.some((r) => r.id === prev)) return prev;
+        return requests[0]!.id;
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [requests]);
+
+  const selectedRow = useMemo(() => {
+    if (!selectedRequestId) return null;
+    return requests.find((r) => r.id === selectedRequestId) ?? null;
+  }, [requests, selectedRequestId]);
 
   return (
-    <ul className="flex flex-col gap-2 md:gap-3">
-      {requests.map((row) => (
-        <li key={row.id}>
-          <RequestCard row={row} />
-        </li>
-      ))}
-    </ul>
+    <div
+      className={cn(
+        "border-border bg-background ui-surface-shadow flex flex-col overflow-hidden rounded-xl border lg:min-h-[min(32rem,calc(100vh-14rem))] lg:flex-row",
+      )}
+    >
+      <aside
+        className={cn(
+          "border-border flex w-full flex-col border-b lg:w-[min(100%,260px)] lg:shrink-0 lg:border-r lg:border-b-0",
+        )}
+      >
+        <div className="border-border flex flex-wrap items-center gap-1.5 border-b px-3 py-2.5">
+          <div className="min-w-0 flex-1">
+            <Select
+              value={selectedEndpointId}
+              onValueChange={onSelectEndpoint}
+              disabled={endpoints.length === 0}
+            >
+              <SelectTrigger
+                size="sm"
+                className="border-border h-9 w-full font-mono text-xs"
+                aria-label="Endpoint"
+              >
+                <SelectValue placeholder="Select endpoint" />
+              </SelectTrigger>
+              <SelectContent>
+                {endpoints.map((ep) => (
+                  <SelectItem key={ep.id} value={ep.id}>
+                    <span className="font-mono text-xs">{ep.publicSlug}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0 rounded-md border-dashed border-stone-300 px-2 text-xs dark:border-stone-600"
+            disabled={!canAdd || addDisabled}
+            onClick={onAddEndpoint}
+          >
+            <Plus className="size-3.5" aria-hidden />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 rounded-md text-muted-foreground hover:text-destructive"
+            disabled={!canDelete}
+            title={
+              canDelete
+                ? "Delete this endpoint"
+                : "At least one endpoint is required"
+            }
+            aria-label="Delete endpoint"
+            onClick={onDeleteEndpoint}
+          >
+            <Trash2 className="size-3.5" aria-hidden />
+          </Button>
+        </div>
+        <ul
+          className="max-h-[min(220px,38vh)] flex-1 overflow-y-auto lg:max-h-none"
+          role="listbox"
+          aria-label="Incoming requests"
+        >
+          {requests.length === 0 ? (
+            <li className="text-muted-foreground px-3 py-8 text-center text-xs">
+              No requests yet.
+            </li>
+          ) : (
+            requests.map((row) => {
+              const active = row.id === selectedRequestId;
+              const animateIn = enterIds.has(row.id);
+              return (
+                <li
+                  key={row.id}
+                  className={animateIn ? "animate-request-enter" : undefined}
+                >
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => setSelectedRequestId(row.id)}
+                    className={cn(
+                      "flex w-full items-start gap-2 border-l-[3px] px-3 py-2 text-left transition-colors",
+                      active
+                        ? "bg-primary/8 border-l-primary"
+                        : "border-l-transparent hover:bg-muted/50",
+                    )}
+                  >
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "mt-0.5 shrink-0 font-mono text-[10px] font-semibold",
+                        getHttpMethodBadgeClass(row.method),
+                      )}
+                    >
+                      {row.method}
+                    </Badge>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground font-mono text-[11px] font-medium tracking-tight">
+                        {shortRequestId(row.id)}
+                      </p>
+                      <p className="text-muted-foreground mt-0.5 line-clamp-2 font-mono text-[10px] break-all">
+                        {row.path || "/"}
+                      </p>
+                      <p className="text-muted-foreground mt-0.5 text-[10px]">
+                        {formatDistanceToNow(row.created_at * 1000, {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              );
+            })
+          )}
+        </ul>
+      </aside>
+
+      <main className="min-h-0 min-w-0 flex-1 p-4 md:p-5">
+        {requests.length === 0 ? (
+          <div className="space-y-4">
+            <div>
+              <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs font-medium">
+                  Ingest URL
+                </span>
+                <CopyUrlButton url={ingestUrl} label="Copy" />
+              </div>
+              <code className="ui-code-well text-foreground block w-full rounded-md px-2.5 py-2 font-mono text-[11px] leading-relaxed break-all md:text-xs">
+                {ingestUrl}
+              </code>
+            </div>
+            <p className="text-muted-foreground text-center text-sm leading-relaxed">
+              No requests yet. Send traffic here or use{" "}
+              <span className="text-foreground">Send test</span>.
+            </p>
+          </div>
+        ) : selectedRow ? (
+          <RequestDetailPanel row={selectedRow} ingestUrl={ingestUrl} />
+        ) : (
+          <p className="text-muted-foreground text-sm">Select a request.</p>
+        )}
+      </main>
+    </div>
   );
 }
 
@@ -321,11 +527,22 @@ export function WebhookWorkspace({
       )
     : "";
 
-  const deepLink = selected
-    ? `${origin.replace(/\/$/, "")}${buildWorkspaceAppPath(selected.publicSlug, selected.secretToken)}`
-    : "";
-
   const canAdd = endpoints.length < MAX_ENDPOINTS_PER_WORKSPACE;
+  const canDeleteEndpoint = endpoints.length > 1;
+
+  const handleAddEndpoint = useCallback(async () => {
+    const r = await createEndpointAction();
+    if (r.success) {
+      setEndpoints((prev) => [...prev, r.endpoint]);
+      setSelectedId(r.endpoint.id);
+    }
+  }, []);
+
+  const handleDeleteSelectedEndpoint = useCallback(async () => {
+    if (!selectedId || endpoints.length <= 1) return;
+    const r = await removeEndpointAction(selectedId);
+    if (r.success) await refresh();
+  }, [selectedId, endpoints.length, refresh]);
 
   if (!ready) {
     return (
@@ -337,260 +554,66 @@ export function WebhookWorkspace({
 
   return (
     <div className="bg-background text-foreground min-h-full">
-      <div className={cn(showHeader ? "py-8 md:py-10" : "pb-0 pt-0")}>
+      <div className={cn(showHeader ? "py-6 md:py-8" : "pb-0 pt-0")}>
         {showHeader ? (
-          <header className="ui-surface mb-8 rounded-xl px-5 py-7 text-center md:px-6 md:text-left">
-            <p className="text-muted-foreground mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.2em]">
-              Webhook workspace
-            </p>
-            <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-              Inspect and test HTTP webhooks
-            </h1>
-            <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-sm leading-relaxed md:mx-0">
-              Manage up to {MAX_ENDPOINTS_PER_WORKSPACE} webhook endpoints in
-              this browser. Send traffic to the ingest URL and review captured
-              requests-in the spirit of{" "}
-              <a
-                className="text-foreground font-medium underline-offset-4 hover:underline"
-                href="https://webhook.cool"
-                target="_blank"
-                rel="noreferrer"
-              >
-                webhook.cool
-              </a>
-              . Requests are stored in D1 when the app runs on Cloudflare
-              Workers.
+          <header className="mb-6 border-border border-b pb-6">
+            <h1 className="text-xl font-medium tracking-tight">Workspace</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Up to {MAX_ENDPOINTS_PER_WORKSPACE} endpoints in this browser.
             </p>
           </header>
         ) : null}
 
         {loadError ? (
           <div
-            className="border-destructive/35 bg-destructive/8 text-destructive mb-6 rounded-lg border px-4 py-3 text-sm"
+            className="mb-6 rounded-lg border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-foreground dark:border-stone-600 dark:bg-stone-900/40"
             role="alert"
           >
             {loadError}
           </div>
         ) : null}
 
-        <div className="space-y-8 md:space-y-9">
-          <ol className="grid gap-3 sm:grid-cols-3">
-            {WORKSPACE_STEPS.map(({ n, title, hint }, i) => {
-              const th = stepIconThemes[i]!;
-              return (
-                <li
-                  key={n}
-                  className="ui-surface flex gap-3 rounded-xl px-3 py-3 md:px-4"
-                >
-                  <span
-                    className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums",
-                      th.well,
-                      th.icon,
-                    )}
-                    aria-hidden
-                  >
-                    {n}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold leading-tight">
-                      {title}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5 text-xs leading-snug">
-                      {hint}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-
-          <section aria-labelledby="endpoints-heading" className="space-y-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3
-                id="endpoints-heading"
-                className="text-foreground flex items-center gap-2 text-sm font-semibold tracking-tight"
-              >
-                <span
-                  className={cn(
-                    "inline-flex size-8 items-center justify-center rounded-lg",
-                    radioIconTheme.well,
-                  )}
-                  aria-hidden
-                >
-                  <Radio className={cn("size-4", radioIconTheme.icon)} />
-                </span>
-                Endpoints
-              </h3>
-              <span className="text-muted-foreground font-mono text-xs tabular-nums">
-                {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {endpoints.map((ep, index) => {
-                const active = ep.id === selectedId;
-                const canDelete = endpoints.length > 1;
-                return (
-                  <div
-                    key={ep.id}
-                    className="border-border flex max-w-full items-center gap-0.5 rounded-full border bg-background p-0.5 pl-1"
-                  >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setSelectedId(ep.id)}
-                      className={cn(
-                        "max-w-[min(100%,16rem)] truncate rounded-full px-3 py-1.5 text-left text-sm transition-colors",
-                        active
-                          ? cn(
-                              "border font-medium text-foreground",
-                              endpointSelectedBorder,
-                              "bg-muted/50",
-                            )
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                      title={ep.publicSlug}
-                    >
-                      <span className="text-muted-foreground mr-1.5 text-[10px] font-semibold uppercase tracking-wide">
-                        {index + 1}.
-                      </span>
-                      <span className="font-mono text-xs">{ep.publicSlug}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
-                      disabled={!canDelete}
-                      title={
-                        canDelete
-                          ? "Delete this endpoint"
-                          : "At least one endpoint is required"
-                      }
-                      aria-label="Delete endpoint"
-                      onClick={async () => {
-                        const r = await removeEndpointAction(ep.id);
-                        if (r.success) await refresh();
-                      }}
-                    >
-                      <Trash2 className="size-3.5" aria-hidden />
-                    </Button>
-                  </div>
-                );
-              })}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 rounded-full border-dashed"
-                disabled={!canAdd || !!loadError}
-                onClick={async () => {
-                  const r = await createEndpointAction();
-                  if (r.success) {
-                    setEndpoints((prev) => [...prev, r.endpoint]);
-                    setSelectedId(r.endpoint.id);
-                  }
-                }}
-              >
-                <Plus className="size-4" aria-hidden />
-                Add endpoint
-                {!canAdd ? " (max)" : ""}
-              </Button>
-            </div>
-            {!canAdd ? (
-              <p className="text-muted-foreground text-[11px] leading-snug">
-                Maximum {MAX_ENDPOINTS_PER_WORKSPACE} endpoints. Remove one to
-                add another.
-              </p>
-            ) : null}
-          </section>
-
+        <div className="space-y-6 md:space-y-7">
           <Tabs defaultValue="inspect" className="w-full">
-            <div className="mb-6 flex w-full justify-center">
-              <TabsList className="border-border bg-muted/80 flex h-auto w-full max-w-md gap-1 rounded-xl border p-1 shadow-inner dark:bg-muted/60">
-                <TabsTrigger value="inspect" className={tabTriggerClass}>
-                  Inspect
-                </TabsTrigger>
-                <TabsTrigger value="send" className={tabTriggerClass}>
-                  Send test
-                </TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList
+              variant="line"
+              className="mb-8 h-auto w-full justify-start gap-10 rounded-none border-0 border-b border-zinc-200/80 bg-transparent p-0 dark:border-zinc-800/80"
+            >
+              <TabsTrigger value="inspect" className={tabTriggerClass}>
+                Inspect
+              </TabsTrigger>
+              <TabsTrigger value="send" className={tabTriggerClass}>
+                Send test
+              </TabsTrigger>
+            </TabsList>
 
-            <TabsContent value="inspect" className="mt-0 space-y-6">
+            <TabsContent value="inspect" className="mt-0 space-y-4">
               {!selected ? (
                 <p className="text-muted-foreground text-sm">
-                  Select an endpoint above to see its ingest URL and request
-                  log.
+                  Add an endpoint from the Inspect tab.
                 </p>
               ) : (
                 <>
-                  <section
-                    className="ui-surface rounded-xl p-4 md:p-5"
-                    aria-label="Ingest URL for selected endpoint"
-                  >
-                    <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <span
-                          className={cn(
-                            "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg",
-                            clipboardIconTheme.well,
-                          )}
-                          aria-hidden
-                        >
-                          <ClipboardCopy
-                            className={cn("size-4", clipboardIconTheme.icon)}
-                          />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold leading-tight">
-                            Ingest URL
-                          </p>
-                          <p className="text-muted-foreground text-xs leading-relaxed">
-                            The path includes your slug and secret-treat it like
-                            a private webhook URL. Each row shows a colored
-                            method tag (POST, GET, …) for what hit this URL.
-                          </p>
-                        </div>
-                      </div>
-                      <CopyUrlButton url={ingestUrl} label="Copy URL" />
+                  {loadError ? (
+                    <div className="border-border text-muted-foreground ui-surface-shadow rounded-xl border border-dashed bg-background py-12 text-center text-sm">
+                      Connect the database to load requests.
                     </div>
-                    <code className="ui-code-well text-foreground block w-full rounded-lg px-3 py-3 font-mono text-xs leading-relaxed break-all md:text-sm">
-                      {ingestUrl}
-                    </code>
-                    <p className="text-muted-foreground mt-3 text-[11px] leading-relaxed">
-                      <span className="text-foreground font-medium">
-                        Bookmark
-                      </span>{" "}
-                      (open this endpoint only):{" "}
-                      <span className="font-mono break-all">{deepLink}</span>
-                    </p>
-                  </section>
-
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h2 className="font-heading text-base font-semibold tracking-tight md:text-lg">
-                        Incoming requests
-                      </h2>
-                      <Badge
-                        variant="outline"
-                        className="text-muted-foreground rounded-full border-border text-[10px]"
-                      >
-                        {loadError ? "Offline" : "Live (D1)"}
-                      </Badge>
-                    </div>
-
-                    {loadError ? (
-                      <div className="border-border text-muted-foreground ui-surface-shadow rounded-xl border border-dashed bg-background py-14 text-center text-sm">
-                        Connect the database to see incoming requests.
-                      </div>
-                    ) : (
-                      <EndpointRequestList
-                        key={selected.id}
-                        endpointId={selected.id}
-                      />
-                    )}
-                  </div>
+                  ) : (
+                    <EndpointRequestInspector
+                      key={selected.id}
+                      endpoints={endpoints}
+                      selectedEndpointId={selected.id}
+                      onSelectEndpoint={setSelectedId}
+                      ingestUrl={ingestUrl}
+                      canAdd={canAdd}
+                      canDelete={canDeleteEndpoint}
+                      addDisabled={!!loadError}
+                      onAddEndpoint={() => void handleAddEndpoint()}
+                      onDeleteEndpoint={() =>
+                        void handleDeleteSelectedEndpoint()
+                      }
+                    />
+                  )}
                 </>
               )}
             </TabsContent>
@@ -598,19 +621,9 @@ export function WebhookWorkspace({
             <TabsContent value="send" className="mt-0 space-y-4">
               {!selected ? (
                 <p className="text-muted-foreground text-sm">
-                  Select an endpoint first—you can then paste its URL with
-                  &quot;Use selected endpoint URL&quot;.
+                  Select an endpoint first.
                 </p>
-              ) : (
-                <p className="text-muted-foreground hidden text-xs leading-relaxed md:block">
-                  Selected endpoint:{" "}
-                  <span className="text-foreground font-mono text-sm">
-                    {selected.publicSlug}
-                  </span>
-                  . Use &quot;Use selected endpoint URL&quot; in the form to
-                  fill the ingest URL.
-                </p>
-              )}
+              ) : null}
               <WebhookSendTest
                 selectedIngestUrl={selected ? ingestUrl || null : null}
               />

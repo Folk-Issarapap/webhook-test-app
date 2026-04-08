@@ -1,36 +1,40 @@
+/** Soft zinc pills — readable hierarchy without loud chroma. */
 const METHOD_BADGE: Record<string, string> = {
-  GET: "border-sky-500/45 bg-sky-500/12 text-sky-900 dark:text-sky-100",
+  GET: "border-zinc-200/80 bg-zinc-50 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-200",
   POST:
-    "border-emerald-500/45 bg-emerald-500/14 text-emerald-950 dark:text-emerald-100",
+    "border-zinc-300/70 bg-zinc-100/80 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-100",
   PUSH:
-    "border-emerald-500/45 bg-emerald-500/14 text-emerald-950 dark:text-emerald-100",
-  PUT: "border-amber-500/45 bg-amber-500/12 text-amber-950 dark:text-amber-100",
+    "border-zinc-300/70 bg-zinc-100/80 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-100",
+  PUT: "border-zinc-200/80 bg-zinc-50/90 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900/35 dark:text-zinc-200",
   PATCH:
-    "border-violet-500/45 bg-violet-500/12 text-violet-950 dark:text-violet-100",
-  DELETE: "border-rose-500/45 bg-rose-500/12 text-rose-950 dark:text-rose-100",
-  HEAD: "border-slate-500/40 bg-slate-500/10 text-slate-900 dark:text-slate-200",
+    "border-zinc-200/80 bg-white text-zinc-900 shadow-sm dark:border-zinc-600 dark:bg-zinc-900/30 dark:text-zinc-100",
+  DELETE:
+    "border-zinc-300/60 bg-zinc-100/60 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-100",
+  HEAD: "border-zinc-200/80 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/30 dark:text-zinc-300",
   OPTIONS:
-    "border-cyan-500/45 bg-cyan-500/10 text-cyan-950 dark:text-cyan-100",
+    "border-zinc-200/80 bg-zinc-50 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900/35 dark:text-zinc-200",
 };
 
-/** Left border accent for request cards (subtle). */
 const METHOD_ACCENT: Record<string, string> = {
-  GET: "border-l-sky-500",
-  POST: "border-l-emerald-500",
-  PUSH: "border-l-emerald-500",
-  PUT: "border-l-amber-500",
-  PATCH: "border-l-violet-500",
-  DELETE: "border-l-rose-500",
-  HEAD: "border-l-slate-500",
-  OPTIONS: "border-l-cyan-500",
+  GET: "border-l-zinc-400",
+  POST: "border-l-blue-500 dark:border-l-blue-400",
+  PUSH: "border-l-blue-500 dark:border-l-blue-400",
+  PUT: "border-l-zinc-500 dark:border-l-zinc-400",
+  PATCH: "border-l-zinc-600 dark:border-l-zinc-400",
+  DELETE: "border-l-zinc-700 dark:border-l-zinc-300",
+  HEAD: "border-l-zinc-400",
+  OPTIONS: "border-l-zinc-500 dark:border-l-zinc-400",
 };
 
 export function getHttpMethodBadgeClass(method: string): string {
   const key = method.trim().toUpperCase();
-  return METHOD_BADGE[key] ?? "border-border bg-muted/80 text-foreground";
+  return (
+    METHOD_BADGE[key] ??
+    "border-zinc-200 bg-zinc-50 text-foreground dark:border-zinc-700 dark:bg-zinc-900/40"
+  );
 }
 
 export function getHttpMethodCardAccentClass(method: string): string {
   const key = method.trim().toUpperCase();
-  return METHOD_ACCENT[key] ?? "border-l-primary/40";
+  return METHOD_ACCENT[key] ?? "border-l-zinc-400";
 }

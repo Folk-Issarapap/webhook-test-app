@@ -1,47 +1,27 @@
 import { headers } from "next/headers";
-import {
-  ArrowDown,
-  KeyRound,
-  Radio,
-  ShieldCheck,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { WebhookWorkspace } from "@/components/webhooks/webhook-workspace";
 import { Button } from "@/components/ui/button";
-import { APP_DISPLAY_NAME } from "@/lib/site";
+import { Separator } from "@/components/ui/separator";
 import { resolveRequestOrigin } from "@/lib/server/request-origin";
-import { ICON_WELL_THEMES } from "@/lib/ui/icon-well-themes";
-import { cn } from "@/lib/utils";
+import { APP_DISPLAY_NAME } from "@/lib/site";
 
-/** Hero badge - fuchsia sparkle */
-const sparklesTheme = ICON_WELL_THEMES[6]!;
-/** Feature cards: sky → violet → emerald */
-const highlightThemes = [
-  ICON_WELL_THEMES[0],
-  ICON_WELL_THEMES[1],
-  ICON_WELL_THEMES[2],
-] as const;
-
-const highlights = [
+const steps = [
   {
-    icon: Zap,
-    title: "Plain or secret URL",
-    description:
-      "Each endpoint has a public slug plus a secret token in the path-fine for providers that expect a signed-looking URL.",
+    n: "01",
+    title: "Pick an endpoint",
+    text: "Select a catcher or add one — your list stays in this browser.",
   },
   {
-    icon: Radio,
-    title: "Live request log",
-    description:
-      "See method, path, headers, and body as requests arrive. Expand a row to copy JSON or raw text.",
+    n: "02",
+    title: "Paste the ingest URL",
+    text: "Use it in your provider or CLI; the secret stays in the path.",
   },
   {
-    icon: ShieldCheck,
-    title: "No login",
-    description:
-      "Open the site and start testing. Your workspace is tied to this browser session-bookmark the page to return.",
+    n: "03",
+    title: "Inspect or send a test",
+    text: "Open any row for headers and body, or use the Send test tab.",
   },
 ] as const;
 
@@ -50,136 +30,78 @@ export default async function Home() {
   const origin = resolveRequestOrigin(h);
 
   return (
-    <div className="bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 pt-12 pb-8 md:px-6 md:pt-16 md:pb-10">
-        <header className="text-center md:text-left">
-          <div className="mb-6 flex flex-col items-center gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="ui-surface inline-flex items-center gap-2.5 rounded-full px-3 py-1.5 text-xs font-medium">
-              <span
-                className={cn(
-                  "flex size-7 shrink-0 items-center justify-center rounded-full",
-                  sparklesTheme.well,
-                )}
-                aria-hidden
-              >
-                <Sparkles className={cn("size-3.5", sparklesTheme.icon)} />
-              </span>
-              <span className="text-muted-foreground">
-                Public tool · No sign-up
-              </span>
-            </div>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-            >
-              <a href="#workspace" className="gap-2 font-medium">
-                Jump to workspace
-                <ArrowDown
-                  className="text-muted-foreground size-3.5"
-                  aria-hidden
-                />
-              </a>
-            </Button>
-          </div>
-
-          <div className="mx-auto max-w-3xl space-y-5 md:mx-0">
-            <p className="text-muted-foreground font-mono text-[11px] font-semibold uppercase tracking-[0.22em]">
+    <div className="min-h-full bg-background text-foreground">
+      <div className="mx-auto max-w-5xl px-5 pt-16 pb-16 md:px-10 md:pt-24 md:pb-20">
+        <header className="flex flex-col gap-12 md:flex-row md:items-start md:justify-between md:gap-16">
+          <div className="max-w-xl space-y-6">
+            <p className="text-[11px] font-medium tracking-[0.22em] text-zinc-500 uppercase dark:text-zinc-400">
               {APP_DISPLAY_NAME}
             </p>
-            <h1 className="font-heading text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-[2.65rem] md:leading-[1.12]">
-              Test webhooks in your browser-fast, clear, and ready for customers
+            <h1 className="font-serif text-[2rem] leading-[1.1] font-normal tracking-tight text-balance text-zinc-900 md:text-[2.85rem] md:leading-[1.05] dark:text-zinc-50">
+              Catch webhooks in one calm screen.
             </h1>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-pretty text-base leading-relaxed md:mx-0 md:text-lg">
-              Paste your ingest URL into your payment provider, GitHub, or curl.
-              We record the HTTP request so you can verify payloads, headers,
-              and signatures-whether the endpoint is a simple path or includes a
-              secret token.
+            <p className="text-[17px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+              Copy a URL, trigger an event, read the request — no account, no
+              clutter. Built for debugging payloads and headers without losing
+              the thread.
             </p>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Button
+                asChild
+                className="rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-medium shadow-none transition-all duration-200 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+              >
+                <a href="#workspace" className="gap-2">
+                  Start in workspace
+                  <ArrowRight className="size-4 opacity-80" aria-hidden />
+                </a>
+              </Button>
+            </div>
           </div>
 
-          <ol className="mt-10 grid gap-4 text-left sm:grid-cols-3">
-            {[
-              {
-                step: "1",
-                title: "Copy ingest URL",
-                body: "Pick an endpoint below and copy its ingest URL (secret is already in the path).",
-              },
-              {
-                step: "2",
-                title: "Trigger an event",
-                body: "Use your dashboard, CLI, or our Send test tab to hit the URL.",
-              },
-              {
-                step: "3",
-                title: "Inspect & debug",
-                body: "Open incoming requests, read headers and body, copy JSON.",
-              },
-            ].map(({ step, title, body }) => (
-              <li
-                key={step}
-                className="ui-surface relative overflow-hidden rounded-2xl p-5"
-              >
-                <span className="text-muted-foreground/25 font-heading absolute right-3 -top-0.5 text-5xl font-bold tabular-nums select-none">
-                  {step}
-                </span>
-                <p className="text-foreground font-semibold tracking-tight">
-                  {title}
-                </p>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {body}
-                </p>
-              </li>
-            ))}
-          </ol>
+          <nav
+            aria-label="How it works"
+            className="w-full max-w-sm shrink-0 border-t border-zinc-200/60 pt-8 dark:border-zinc-800/80 md:border-t-0 md:border-l md:pt-0 md:pl-10"
+          >
+            <ol className="space-y-7">
+              {steps.map((s) => (
+                <li key={s.n} className="flex gap-5">
+                  <span className="font-mono text-xs text-zinc-400 tabular-nums dark:text-zinc-500">
+                    {s.n}
+                  </span>
+                  <div>
+                    <p className="font-medium tracking-tight">{s.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                      {s.text}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </nav>
         </header>
-
-        <ul className="mt-10 grid gap-4 md:grid-cols-3">
-          {highlights.map(({ icon: Icon, title, description }, i) => {
-            const th = highlightThemes[i]!;
-            return (
-              <li key={title} className="ui-surface flex gap-4 rounded-2xl p-5">
-                <span
-                  className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-xl",
-                    th.well,
-                  )}
-                >
-                  <Icon className={cn("size-5", th.icon)} aria-hidden />
-                </span>
-                <div className="min-w-0 space-y-1.5">
-                  <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
-                    {title}
-                    {title.includes("secret") ? (
-                      <KeyRound
-                        className="text-muted-foreground size-3.5 shrink-0"
-                        aria-hidden
-                      />
-                    ) : null}
-                  </p>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {description}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
       </div>
+
+      <Separator className="bg-zinc-200/50 dark:bg-zinc-800/60" />
 
       <div
         id="workspace"
-        className="border-border scroll-mt-8 border-t bg-background py-10 md:py-14"
+        className="scroll-mt-6 bg-zinc-50/40 px-5 py-16 md:px-10 md:py-20 dark:bg-zinc-950/30"
       >
-        <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <div className="mb-8 md:mb-10">
-            <h2 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">
-              Your workspace
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8">
+            <h2 className="font-serif text-2xl font-normal tracking-tight text-zinc-900 md:text-[1.75rem] dark:text-zinc-50">
+              Workspace
             </h2>
-            <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-              Follow the three steps in the panel-pick an endpoint, copy the URL
-              into your provider, then inspect traffic or send a test from here.
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              Optional: open with{" "}
+              <code className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-[13px] text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+                ?slug=
+              </code>{" "}
+              and{" "}
+              <code className="rounded bg-zinc-100 px-1 py-0.5 font-mono text-[13px] text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+                ?token=
+              </code>{" "}
+              to attach a catcher.
             </p>
           </div>
 
