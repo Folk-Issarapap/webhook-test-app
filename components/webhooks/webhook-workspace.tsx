@@ -1,8 +1,10 @@
 "use client";
 
 import { format, formatDistanceToNow } from "date-fns";
+import { enUS, th as thDateLocale } from "date-fns/locale";
 import { Plus, Radio, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -23,9 +25,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { getHttpMethodBadgeClass } from "@/lib/http-method-styles";
-import { APP_DISPLAY_NAME } from "@/lib/site";
 import { MAX_ENDPOINTS_PER_WORKSPACE } from "@/lib/webhooks/constants";
 import { isValidWorkspacePair } from "@/lib/webhooks/workspace-storage";
 import { buildIngestUrl } from "@/lib/webhooks/urls";
@@ -39,8 +41,8 @@ import { WorkspaceTrafficGuide } from "./workspace-traffic-guide";
 const endpointActiveClass =
   "bg-primary/14 text-foreground ring-1 ring-primary/30 dark:bg-primary/18";
 
-function tryFormatJson(raw: string | null): string {
-  if (!raw) return "—";
+function tryFormatJson(raw: string | null, empty: string): string {
+  if (!raw) return empty;
   try {
     const parsed: unknown = JSON.parse(raw);
     return JSON.stringify(parsed, null, 2);
@@ -87,6 +89,13 @@ export function WebhookWorkspace({
   routeBasePath = "/webhook",
 }: WebhookWorkspaceProps) {
   const router = useRouter();
+  const params = useParams();
+  const locale =
+    typeof params.locale === "string" ? params.locale : routing.defaultLocale;
+  const t = useTranslations("workspace");
+  const tSite = useTranslations("site");
+  const tCommon = useTranslations("common");
+  const dateLocale = locale === "th" ? thDateLocale : enUS;
   const [ready, setReady] = useState(false);
   const [endpoints, setEndpoints] = useState<WorkspaceEndpointDto[]>([]);
   const [selectedEndpointId, setSelectedEndpointId] = useState<string | null>(
@@ -134,7 +143,11 @@ export function WebhookWorkspace({
       const token = params.get("token");
       if (slug && token && isValidWorkspacePair(slug, token)) {
         await attachEndpointByTokensAction(slug, token);
-        router.replace(routeBasePath, { scroll: false });
+        const path =
+          routeBasePath === "/"
+            ? `/${locale}`
+            : `/${locale}${routeBasePath}`;
+        router.replace(path, { scroll: false });
       }
 
       const r = await bootstrapWorkspaceAction();
@@ -158,7 +171,7 @@ export function WebhookWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [router, routeBasePath]);
+  }, [router, routeBasePath, locale]);
 
   const selected = useMemo(() => {
     if (!selectedEndpointId) return null;
@@ -225,8 +238,11 @@ export function WebhookWorkspace({
   );
 
   const bodyDisplay = useMemo(
-    () => (selectedRequest ? tryFormatJson(selectedRequest.body) : ""),
-    [selectedRequest],
+    () =>
+      selectedRequest
+        ? tryFormatJson(selectedRequest.body, tCommon("dash"))
+        : "",
+    [selectedRequest, tCommon],
   );
 
   const headersCopyText = useMemo(
@@ -291,10 +307,10 @@ export function WebhookWorkspace({
           {/* Row 1 / col 1 (md): title only — border-b aligns with tab row */}
           <div className="border-border/50 shrink-0 border-b px-4 py-4 md:col-start-1 md:row-start-1 md:border-border/60 md:border-r md:bg-muted/15">
             <p className="text-foreground/90 font-semibold tracking-tight">
-              {APP_DISPLAY_NAME}
+              {tSite("title")}
             </p>
             <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
-              Session workspace · no sign-up
+              {t("sessionSubtitle")}
             </p>
           </div>
 
@@ -303,7 +319,7 @@ export function WebhookWorkspace({
             <div className="shrink-0 space-y-3 px-4 py-3">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                  Webhooks
+                  {t("webhooks")}
                 </span>
                 <span className="text-muted-foreground font-mono text-[10px] tabular-nums">
                   {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE}
@@ -343,11 +359,9 @@ export function WebhookWorkspace({
                         className="text-muted-foreground hover:text-destructive size-7 shrink-0 rounded-md"
                         disabled={!canDelete}
                         title={
-                          canDelete
-                            ? "Remove webhook"
-                            : "At least one webhook is required"
+                          canDelete ? t("removeWebhook") : t("oneWebhookRequired")
                         }
-                        aria-label="Delete webhook"
+                        aria-label={t("deleteWebhook")}
                         onClick={async () => {
                           const r = await removeEndpointAction(ep.id);
                           if (r.success) await refresh();
@@ -373,7 +387,7 @@ export function WebhookWorkspace({
                   }}
                 >
                   <Plus className="size-3.5" aria-hidden />
-                  New webhook
+                  {t("newWebhook")}
                 </Button>
               </div>
             </div>
@@ -384,13 +398,13 @@ export function WebhookWorkspace({
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                        Webhook URL
+                        {t("webhookUrl")}
                       </span>
                       <span className="text-muted-foreground text-[11px]">
-                        You can copy this URL to send traffic to the webhook
+                        {t("webhookUrlHint")}
                       </span>
                     </div>
-                    <CopyUrlButton url={ingestUrl} label="Copy" />
+                    <CopyUrlButton url={ingestUrl} />
                   </div>
                   <p className="font-mono text-[11px] bg-muted/30 rounded-lg p-3 leading-snug break-all text-foreground/90">
                     {ingestUrl}
@@ -403,34 +417,34 @@ export function WebhookWorkspace({
               <div className="text-muted-foreground flex shrink-0 items-center justify-between px-4 py-2 text-[11px] font-medium tracking-wide uppercase">
                 <span className="flex items-center gap-1.5">
                   <Radio className="size-3" aria-hidden />
-                  Requests
+                  {t("requests")}
                 </span>
                 <Badge
                   variant="outline"
                   className="border-primary/25 bg-primary/8 text-[10px] font-normal text-primary"
                 >
-                  {loadError ? "Offline" : "Live"}
+                  {loadError ? t("offline") : t("live")}
                 </Badge>
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3 [scrollbar-gutter:stable]">
                 {!selected ? (
                   <p className="text-muted-foreground px-2 py-6 text-center text-xs">
-                    Select a webhook above.
+                    {t("selectWebhook")}
                   </p>
                 ) : loadError ? (
                   <p className="text-muted-foreground px-2 py-6 text-center text-xs">
-                    Database unavailable — requests not loaded.
+                    {t("dbUnavailable")}
                   </p>
                 ) : visibleRequests.length === 0 ? (
                   <p className="text-muted-foreground px-3 py-10 text-center text-xs leading-relaxed">
-                    No requests yet. Send traffic to the webhook URL or open{" "}
+                    {t("noRequestsYet")}{" "}
                     <button
                       type="button"
                       className="text-primary font-medium underline-offset-2 hover:underline"
                       onClick={() => setMainTab("send")}
                     >
-                      Send test
+                      {t("sendTest")}
                     </button>{" "}
                     →
                   </p>
@@ -467,10 +481,9 @@ export function WebhookWorkspace({
                                   {row.method}
                                 </Badge>
                                 <span className="text-muted-foreground font-mono text-[10px]">
-                                  {format(
-                                    row.created_at * 1000,
-                                    "d MMM HH:mm:ss",
-                                  )}
+                                  {format(row.created_at * 1000, "d MMM HH:mm:ss", {
+                                    locale: dateLocale,
+                                  })}
                                 </span>
                               </div>
                               <p className="text-muted-foreground mt-1 truncate font-mono text-[11px]">
@@ -479,6 +492,7 @@ export function WebhookWorkspace({
                               <p className="text-muted-foreground/80 mt-0.5 text-[10px]">
                                 {formatDistanceToNow(row.created_at * 1000, {
                                   addSuffix: true,
+                                  locale: dateLocale,
                                 })}
                               </p>
                             </button>
@@ -487,8 +501,8 @@ export function WebhookWorkspace({
                               variant="ghost"
                               size="icon"
                               className="text-muted-foreground hover:text-destructive size-9 shrink-0 self-center rounded-md opacity-60 group-hover:opacity-100"
-                              title="Remove from list"
-                              aria-label="Delete request"
+                              title={t("removeFromList")}
+                              aria-label={t("deleteRequest")}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 void deleteRequest(row.id);
@@ -522,13 +536,13 @@ export function WebhookWorkspace({
                   value="traffic"
                   className="data-active:bg-background flex-1 rounded-[7px] text-xs font-medium data-active:shadow-sm"
                 >
-                  Traffic
+                  {t("traffic")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="send"
                   className="data-active:bg-background flex-1 rounded-[7px] text-xs font-medium data-active:shadow-sm"
                 >
-                  Send test
+                  {t("sendTestTab")}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -540,18 +554,17 @@ export function WebhookWorkspace({
               <div className="mx-auto min-h-0 w-full max-w-4xl flex-1 overflow-y-auto overscroll-contain px-4 py-5 md:px-8 md:py-6 [scrollbar-gutter:stable]">
                 {!selected ? (
                   <p className="text-muted-foreground text-sm">
-                    Choose a webhook on the left.
+                    {t("chooseWebhookLeft")}
                   </p>
                 ) : showTrafficGuide ? (
                   <WorkspaceTrafficGuide />
                 ) : !selectedRequest ? (
                   <div className="flex min-h-[min(24rem,50dvh)] flex-col items-center justify-center py-12 text-center">
                     <p className="text-foreground text-lg font-medium tracking-tight">
-                      Select a request
+                      {t("selectRequest")}
                     </p>
                     <p className="text-muted-foreground mt-2 max-w-sm text-sm leading-relaxed">
-                      Click an item in the list to inspect headers and body
-                      here.
+                      {t("selectRequestHint")}
                     </p>
                   </div>
                 ) : (
@@ -569,12 +582,14 @@ export function WebhookWorkspace({
                         {format(
                           selectedRequest.created_at * 1000,
                           "d MMM yyyy HH:mm:ss.SSS",
+                          { locale: dateLocale },
                         )}{" "}
                         ·{" "}
                         {formatDistanceToNow(
                           selectedRequest.created_at * 1000,
                           {
                             addSuffix: true,
+                            locale: dateLocale,
                           },
                         )}
                       </p>
@@ -583,7 +598,7 @@ export function WebhookWorkspace({
                     {selectedRequest.source_note ? (
                       <div>
                         <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">
-                          Source
+                          {t("source")}
                         </p>
                         <div className="bg-muted/35 ring-border/40 rounded-lg p-3 text-sm ring-1">
                           {selectedRequest.source_note}
@@ -594,9 +609,9 @@ export function WebhookWorkspace({
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                          Headers
+                          {t("headers")}
                         </p>
-                        <CopyTextButton text={headersCopyText} label="Copy" />
+                        <CopyTextButton text={headersCopyText} />
                       </div>
                       {headersEntries.length === 0 ? (
                         <pre className="bg-muted/30 ring-border/35 font-mono text-xs break-all whitespace-pre-wrap rounded-lg p-3 ring-1">
@@ -608,10 +623,10 @@ export function WebhookWorkspace({
                             <TableHeader>
                               <TableRow className="border-border/50 hover:bg-transparent">
                                 <TableHead className="text-muted-foreground w-[38%] pl-3 font-mono text-xs font-normal">
-                                  Name
+                                  {t("headerName")}
                                 </TableHead>
                                 <TableHead className="text-muted-foreground font-mono text-xs font-normal">
-                                  Value
+                                  {t("headerValue")}
                                 </TableHead>
                               </TableRow>
                             </TableHeader>
@@ -638,9 +653,9 @@ export function WebhookWorkspace({
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                          Body
+                          {t("body")}
                         </p>
-                        <CopyTextButton text={bodyDisplay} label="Copy" />
+                        <CopyTextButton text={bodyDisplay} />
                       </div>
                       <pre className="bg-muted/30 ring-border/35 max-h-[min(22rem,38vh)] overflow-y-auto rounded-lg p-4 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap ring-1 md:text-xs">
                         {bodyDisplay}

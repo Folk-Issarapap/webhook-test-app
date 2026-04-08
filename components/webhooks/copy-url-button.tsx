@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,9 @@ type CopyUrlButtonProps = {
   label?: string;
 };
 
-export function CopyUrlButton({ url, label = "Copy URL" }: CopyUrlButtonProps) {
+export function CopyUrlButton({ url, label }: CopyUrlButtonProps) {
+  const t = useTranslations("common");
+  const resolvedLabel = label ?? t("copyUrl");
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -34,12 +37,12 @@ export function CopyUrlButton({ url, label = "Copy URL" }: CopyUrlButtonProps) {
       {copied ? (
         <>
           <Check className="size-3.5" aria-hidden />
-          Copied
+          {t("copied")}
         </>
       ) : (
         <>
           <Copy className="size-3.5" aria-hidden />
-          {label}
+          {resolvedLabel}
         </>
       )}
     </Button>
@@ -52,7 +55,9 @@ type CopyTextButtonProps = {
 };
 
 /** Copy arbitrary text (e.g. headers or body blocks). */
-export function CopyTextButton({ text, label = "Copy" }: CopyTextButtonProps) {
+export function CopyTextButton({ text, label }: CopyTextButtonProps) {
+  const t = useTranslations("common");
+  const resolvedLabel = label ?? t("copy");
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -79,12 +84,12 @@ export function CopyTextButton({ text, label = "Copy" }: CopyTextButtonProps) {
       {copied ? (
         <>
           <Check className="size-3" aria-hidden />
-          Copied
+          {t("copied")}
         </>
       ) : (
         <>
           <Copy className="size-3" aria-hidden />
-          {label}
+          {resolvedLabel}
         </>
       )}
     </Button>

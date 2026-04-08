@@ -7,12 +7,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* Default (en): Jakarta first. Thai pages override via html[data-locale="th"] below. */
   --font-sans:
-    "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    var(--font-sans-jakarta, ui-sans-serif), var(--font-sans-kanit, ui-sans-serif),
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
   --font-mono:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+    var(--font-mono-geist, ui-monospace), ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -130,7 +132,29 @@
     @apply bg-background text-foreground antialiased;
   }
   html {
-    @apply font-sans;
+    font-family: var(--font-sans);
+  }
+
+  /*
+   * `font-heading` / `font-sans` utilities read `--font-sans` from theme — not inherited
+   * `font-family`. Redefine `--font-sans` + `--font-heading` per locale so headings match body.
+   */
+  html[data-locale="th"] {
+    --font-sans:
+      var(--font-sans-kanit, "Kanit"), "Kanit", var(--font-sans-jakarta, ui-sans-serif),
+      ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol";
+    --font-heading: var(--font-sans);
+    font-family: var(--font-sans);
+  }
+
+  html[data-locale="en"] {
+    --font-sans:
+      var(--font-sans-jakarta, ui-sans-serif), var(--font-sans-kanit, "Kanit"),
+      ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol";
+    --font-heading: var(--font-sans);
+    font-family: var(--font-sans);
   }
 }
 

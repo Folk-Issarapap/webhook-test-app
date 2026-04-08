@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
 import { getD1 } from "@/lib/db/d1";
+import { routing } from "@/i18n/routing";
 import { generateWorkspaceTokens } from "@/lib/webhooks/generate-workspace-path";
 import {
   countWorkspaceLinks,
@@ -26,6 +28,13 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 400;
 
 function jsonError(message: string) {
   return { success: false as const, message };
+}
+
+function revalidateWorkspacePaths() {
+  for (const locale of routing.locales) {
+    revalidatePath(`/${locale}`);
+    revalidatePath(`/${locale}/webhook`);
+  }
 }
 
 async function getCookieStore() {
@@ -68,16 +77,17 @@ export async function bootstrapWorkspaceAction(): Promise<
   | { success: true; endpoints: WorkspaceEndpointDto[] }
   | { success: false; message: string }
 > {
+  const t = await getTranslations("serverErrors");
   const db = getD1();
   if (!db) {
-    return jsonError("Database is not available. Run with Cloudflare Workers (e.g. pnpm dev / deploy).");
+    return jsonError(t("databaseUnavailable"));
   }
 
   const workspaceId = await ensureWorkspaceId();
   let endpoints = await listEndpointsForWorkspace(db, workspaceId);
 
   if (endpoints.length === 0) {
-    const created = await createEndpointInternal(db, workspaceId);
+    const created = await createEndpointInternal(db, workspaceId, t);
     if (!created.success) return created;
     endpoints = await listEndpointsForWorkspace(db, workspaceId);
   }
@@ -105,10 +115,11 @@ function toDto(row: {
 async function createEndpointInternal(
   db: D1Database,
   workspaceId: string,
+  t: Awaited<ReturnType<typeof getTranslations>>,
 ): Promise<{ success: true } | { success: false; message: string }> {
   const n = await countWorkspaceLinks(db, workspaceId);
   if (n >= MAX_ENDPOINTS_PER_WORKSPACE) {
-    return jsonError(`Maximum ${MAX_ENDPOINTS_PER_WORKSPACE} webhooks per workspace.`);
+    return jsonError(t("maxWebhooks", { max: MAX_ENDPOINTS_PER_WORKSPACE }));
   }
 
   const { publicSlug, secretToken } = generateWorkspaceTokens();
@@ -130,52 +141,52 @@ export async function createEndpointAction(): Promise<
   | { success: true; endpoint: WorkspaceEndpointDto }
   | { success: false; message: string }
 > {
+  const t = await getTranslations("serverErrors");
   const db = getD1();
   if (!db) {
-    return jsonError("Database is not available.");
+    return jsonError(t("databaseUnavailableShort"));
   }
 
   const workspaceId = await ensureWorkspaceId();
-  const created = await createEndpointInternal(db, workspaceId);
+  const created = await createEndpointInternal(db, workspaceId, t);
   if (!created.success) return created;
 
   const endpoints = await listEndpointsForWorkspace(db, workspaceId);
   const last = endpoints[endpoints.length - 1];
-  if (!last) return jsonError("Failed to create endpoint.");
+  if (!last) return jsonError(t("failedCreate"));
 
-  revalidatePath("/");
-  revalidatePath("/webhook");
+  revalidateWorkspacePaths();
   return { success: true, endpoint: toDto(last) };
 }
 
 export async function removeEndpointAction(
   endpointId: string,
 ): Promise<{ success: true } | { success: false; message: string }> {
+  const t = await getTranslations("serverErrors");
   const db = getD1();
   if (!db) {
-    return jsonError("Database is not available.");
+    return jsonError(t("databaseUnavailableShort"));
   }
 
   const workspaceId = await getWorkspaceId();
   if (!workspaceId) {
-    return jsonError("No workspace.");
+    return jsonError(t("noWorkspace"));
   }
 
   const ok = await workspaceHasEndpoint(db, workspaceId, endpointId);
   if (!ok) {
-    return jsonError("Endpoint not found.");
+    return jsonError(t("endpointNotFound"));
   }
 
   const n = await countWorkspaceLinks(db, workspaceId);
   if (n <= 1) {
-    return jsonError("At least one webhook is required.");
+    return jsonError(t("oneWebhookRequired"));
   }
 
   await deleteWorkspaceLink(db, workspaceId, endpointId);
   await deleteEndpointIfOrphaned(db, endpointId);
 
-  revalidatePath("/");
-  revalidatePath("/webhook");
+  revalidateWorkspacePaths();
   return { success: true };
 }
 
@@ -189,18 +200,19 @@ export async function attachEndpointByTokensAction(
   | { success: true; endpoint: WorkspaceEndpointDto }
   | { success: false; message: string }
 > {
+  const t = await getTranslations("serverErrors");
   const db = getD1();
   if (!db) {
-    return jsonError("Database is not available.");
+    return jsonError(t("databaseUnavailableShort"));
   }
 
   if (!isValidWorkspacePair(publicSlug, secretToken)) {
-    return jsonError("Invalid link.");
+    return jsonError(t("invalidLink"));
   }
 
   const ep = await findEndpointBySlugToken(db, publicSlug, secretToken);
   if (!ep) {
-    return jsonError("Unknown webhook URL.");
+    return jsonError(t("unknownWebhook"));
   }
 
   const workspaceId = await ensureWorkspaceId();
@@ -209,13 +221,12 @@ export async function attachEndpointByTokensAction(
     const n = await countWorkspaceLinks(db, workspaceId);
     if (n >= MAX_ENDPOINTS_PER_WORKSPACE) {
       return jsonError(
-        `Workspace is full (${MAX_ENDPOINTS_PER_WORKSPACE}). Remove one webhook to add this link.`,
+        t("workspaceFull", { max: MAX_ENDPOINTS_PER_WORKSPACE }),
       );
     }
     await ensureWorkspaceLink(db, workspaceId, ep.id);
   }
 
-  revalidatePath("/");
-  revalidatePath("/webhook");
+  revalidateWorkspacePaths();
   return { success: true, endpoint: toDto(ep) };
 }

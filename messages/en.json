@@ -1,0 +1,112 @@
+{
+  "common": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyUrl": "Copy URL",
+    "dash": "—"
+  },
+  "site": {
+    "title": "Webhook Workspace",
+    "description": "Free public webhook tester: capture HTTP requests, inspect headers and body, and try signed URLs with a secret in the path—no account required.",
+    "footerTagline": "is a free, public webhook tester: capture requests, inspect headers and body, and try URLs with a secret in the path. No account—open the page and go."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "th": "ไทย"
+  },
+  "theme": {
+    "toLight": "Switch to light mode",
+    "toDark": "Switch to dark mode"
+  },
+  "workspace": {
+    "sessionSubtitle": "Session workspace · no sign-up",
+    "webhooks": "Webhooks",
+    "removeWebhook": "Remove webhook",
+    "oneWebhookRequired": "At least one webhook is required",
+    "deleteWebhook": "Delete webhook",
+    "newWebhook": "New webhook",
+    "webhookUrl": "Webhook URL",
+    "webhookUrlHint": "You can copy this URL to send traffic to the webhook",
+    "requests": "Requests",
+    "live": "Live",
+    "offline": "Offline",
+    "selectWebhook": "Select a webhook above.",
+    "dbUnavailable": "Database unavailable — requests not loaded.",
+    "noRequestsYet": "No requests yet. Send traffic to the webhook URL or open",
+    "sendTest": "Send test",
+    "traffic": "Traffic",
+    "sendTestTab": "Send test",
+    "chooseWebhookLeft": "Choose a webhook on the left.",
+    "selectRequest": "Select a request",
+    "selectRequestHint": "Click an item in the list to inspect headers and body here.",
+    "source": "Source",
+    "headers": "Headers",
+    "headerName": "Name",
+    "headerValue": "Value",
+    "body": "Body",
+    "removeFromList": "Remove from list",
+    "deleteRequest": "Delete request"
+  },
+  "trafficGuide": {
+    "badge": "Public · No account · Free",
+    "title": "Test webhooks in the browser",
+    "intro": "Copy your webhook URL into your provider or curl. We capture the HTTP request so you can verify payloads and headers—plain path or a secret in the URL.",
+    "highlight1Title": "Plain or secret URL",
+    "highlight1Desc": "Public slug plus a secret token in the path—works with providers that expect a signed-looking URL.",
+    "highlight2Title": "Live request log",
+    "highlight2Desc": "Method, path, headers, and body as requests arrive. Select a row to inspect or copy JSON.",
+    "highlight3Title": "No login",
+    "highlight3Desc": "Open the site and start testing. This browser session is your workspace—bookmark to return."
+  },
+  "sendTest": {
+    "serverHintBefore": "The request runs from this app's server (helps with providers that block browser CORS).",
+    "serverHintAfter": "only, 30s timeout.",
+    "http": "http",
+    "https": "https",
+    "requestUrl": "Request URL",
+    "useSelectedUrl": "Use selected webhook URL",
+    "urlPlaceholder": "https://example.com/webhook",
+    "method": "Method",
+    "sendRequest": "Send request",
+    "headersJson": "Headers (JSON object)",
+    "custom": "Custom",
+    "template": "Template",
+    "preset": "Preset",
+    "headersTemplateHintStart": "Switch to",
+    "headersTemplateHintEnd": "to edit headers freely.",
+    "body": "Body",
+    "bodyTemplateHintStart": "Switch to",
+    "bodyTemplateHintEnd": "to edit the body freely.",
+    "bodyOmitted": "Body is omitted for {method} requests.",
+    "errHeadersObject": "Headers must be a JSON object.",
+    "errHeaderString": "Header \"{key}\" must be a string value.",
+    "errHeadersJson": "Headers must be valid JSON.",
+    "errInvalidResponse": "Invalid response from server.",
+    "errUnexpected": "Unexpected response from server.",
+    "errNetwork": "Network error — could not reach the test endpoint.",
+    "response": "Response",
+    "responseHeaders": "Response headers",
+    "responseBody": "Response body",
+    "truncated": "Response body was truncated for display.",
+    "emptyResponse": "Response status, headers, and body will show here after you send a request."
+  },
+  "webhooksEntry": {
+    "redirecting": "Redirecting to workspace…"
+  },
+  "loading": {
+    "workspace": "Loading workspace"
+  },
+  "serverErrors": {
+    "databaseUnavailable": "Database is not available. Run with Cloudflare Workers (e.g. pnpm dev / deploy).",
+    "databaseUnavailableShort": "Database is not available.",
+    "noWorkspace": "No workspace.",
+    "endpointNotFound": "Endpoint not found.",
+    "oneWebhookRequired": "At least one webhook is required.",
+    "failedCreate": "Failed to create endpoint.",
+    "maxWebhooks": "Maximum {max} webhooks per workspace.",
+    "invalidLink": "Invalid link.",
+    "unknownWebhook": "Unknown webhook URL.",
+    "workspaceFull": "Workspace is full ({max}). Remove one webhook to add this link."
+  }
+}

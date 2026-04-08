@@ -1,4 +1,5 @@
-import { APP_DISPLAY_NAME, APP_FOOTER_TAGLINE } from "@/lib/site";
+import { getTranslations } from "next-intl/server";
+
 import { cn } from "@/lib/utils";
 
 type SiteFooterProps = {
@@ -6,7 +7,9 @@ type SiteFooterProps = {
   compact?: boolean;
 };
 
-export function SiteFooter({ compact }: SiteFooterProps) {
+export async function SiteFooter({ compact }: SiteFooterProps) {
+  const t = await getTranslations("site");
+
   return (
     <footer
       className={cn(
@@ -17,7 +20,7 @@ export function SiteFooter({ compact }: SiteFooterProps) {
       <div
         className={cn(
           "mx-auto max-w-3xl px-4 text-center",
-          compact ? "py-3 md:px-6" : "py-8 md:px-6 md:py-10",
+          compact ? "py-6 md:px-6" : "py-8 md:px-6 md:py-10",
         )}
       >
         <p
@@ -26,10 +29,8 @@ export function SiteFooter({ compact }: SiteFooterProps) {
             compact ? "text-[11px] md:text-xs" : "text-xs md:text-sm",
           )}
         >
-          <span className="text-foreground font-semibold">
-            {APP_DISPLAY_NAME}
-          </span>{" "}
-          {APP_FOOTER_TAGLINE}
+          <span className="text-foreground font-semibold">{t("title")}</span>{" "}
+          {t("footerTagline")}
         </p>
       </div>
     </footer>

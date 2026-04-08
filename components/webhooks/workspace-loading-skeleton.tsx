@@ -1,13 +1,17 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function WorkspaceLoadingSkeleton() {
+  const t = useTranslations("loading");
+
   return (
     <div
       className="flex min-h-[50vh] flex-col gap-0 md:flex-row md:gap-0"
       aria-busy="true"
-      aria-label="Loading workspace"
+      aria-label={t("workspace")}
     >
       <aside className="border-border/60 flex w-full flex-col border-b md:w-104 md:border-b-0 md:border-r">
         <div className="border-border/50 space-y-3 border-b px-4 py-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 
@@ -13,6 +14,7 @@ function useIsClient() {
 }
 
 export function FloatingThemeToggle() {
+  const t = useTranslations("theme");
   const { resolvedTheme, setTheme } = useTheme();
   const isClient = useIsClient();
 
@@ -34,7 +36,7 @@ export function FloatingThemeToggle() {
       size="icon"
       className="border-border/60 bg-background/70 fixed top-4 right-4 z-50 size-9 rounded-full border backdrop-blur-sm"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? t("toLight") : t("toDark")}
     >
       {isDark ? (
         <Sun className="size-4.5" aria-hidden />

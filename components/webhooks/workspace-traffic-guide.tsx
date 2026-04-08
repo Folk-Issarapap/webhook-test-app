@@ -1,44 +1,46 @@
+"use client";
+
 import { KeyRound, Radio, ShieldCheck, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
-const highlights = [
-  {
-    icon: Zap,
-    title: "Plain or secret URL",
-    description:
-      "Public slug plus a secret token in the path—works with providers that expect a signed-looking URL.",
-  },
-  {
-    icon: Radio,
-    title: "Live request log",
-    description:
-      "Method, path, headers, and body as requests arrive. Select a row to inspect or copy JSON.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "No login",
-    description:
-      "Open the site and start testing. This browser session is your workspace—bookmark to return.",
-  },
-] as const;
+const HIGHLIGHT_ICONS = [Zap, Radio, ShieldCheck] as const;
 
 /** Empty-state onboarding for Traffic when there are no captured requests yet. */
 export function WorkspaceTrafficGuide() {
+  const t = useTranslations("trafficGuide");
+
+  const items = [
+    {
+      icon: HIGHLIGHT_ICONS[0],
+      title: t("highlight1Title"),
+      description: t("highlight1Desc"),
+    },
+    {
+      icon: HIGHLIGHT_ICONS[1],
+      title: t("highlight2Title"),
+      description: t("highlight2Desc"),
+    },
+    {
+      icon: HIGHLIGHT_ICONS[2],
+      title: t("highlight3Title"),
+      description: t("highlight3Desc"),
+    },
+  ] as const;
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col px-2 py-4 text-center md:py-6">
-      <p className="text-muted-foreground text-sm">Public · No account · Free</p>
+      <p className="text-muted-foreground text-sm">{t("badge")}</p>
       <h2 className="font-heading text-foreground mt-4 text-balance text-2xl font-semibold tracking-tight md:text-[1.65rem] md:leading-snug">
-        Test webhooks in the browser
+        {t("title")}
       </h2>
       <p className="text-muted-foreground mx-auto mt-3 max-w-md text-pretty text-sm leading-relaxed md:text-[0.95rem]">
-        Copy your webhook URL into your provider or curl. We capture the HTTP
-        request so you can verify payloads and headers—plain path or a secret
-        in the URL.
+        {t("intro")}
       </p>
 
       <ul className="border-border/60 mt-10 w-full space-y-0 divide-y divide-border/70 border-y text-left">
-        {highlights.map(({ icon: Icon, title, description }) => (
+        {items.map(({ icon: Icon, title, description }, index) => (
           <li key={title} className="flex gap-3 py-4 first:pt-5 last:pb-5">
             <span
               className={cn(
@@ -51,7 +53,7 @@ export function WorkspaceTrafficGuide() {
             <div className="min-w-0 space-y-1">
               <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
                 {title}
-                {title.includes("secret") ? (
+                {index === 0 ? (
                   <KeyRound
                     className="text-muted-foreground size-3.5 shrink-0"
                     aria-hidden
