@@ -1,33 +1,33 @@
+/** Single neutral style — HTTP method still readable via mono + weight. */
+const NEUTRAL_BADGE =
+  "border-border/80 bg-muted/70 text-foreground dark:bg-muted/50";
+
 const METHOD_BADGE: Record<string, string> = {
-  GET: "border-sky-500/45 bg-sky-500/12 text-sky-900 dark:text-sky-100",
-  POST:
-    "border-emerald-500/45 bg-emerald-500/14 text-emerald-950 dark:text-emerald-100",
-  PUSH:
-    "border-emerald-500/45 bg-emerald-500/14 text-emerald-950 dark:text-emerald-100",
-  PUT: "border-amber-500/45 bg-amber-500/12 text-amber-950 dark:text-amber-100",
-  PATCH:
-    "border-violet-500/45 bg-violet-500/12 text-violet-950 dark:text-violet-100",
-  DELETE: "border-rose-500/45 bg-rose-500/12 text-rose-950 dark:text-rose-100",
-  HEAD: "border-slate-500/40 bg-slate-500/10 text-slate-900 dark:text-slate-200",
-  OPTIONS:
-    "border-cyan-500/45 bg-cyan-500/10 text-cyan-950 dark:text-cyan-100",
+  GET: NEUTRAL_BADGE,
+  POST: NEUTRAL_BADGE,
+  PUSH: NEUTRAL_BADGE,
+  PUT: NEUTRAL_BADGE,
+  PATCH: NEUTRAL_BADGE,
+  DELETE: NEUTRAL_BADGE,
+  HEAD: NEUTRAL_BADGE,
+  OPTIONS: NEUTRAL_BADGE,
 };
 
-/** Left border accent for request cards (subtle). */
+/** Left border: one subtle accent for all methods (scannable list, not rainbow). */
 const METHOD_ACCENT: Record<string, string> = {
-  GET: "border-l-sky-500",
-  POST: "border-l-emerald-500",
-  PUSH: "border-l-emerald-500",
-  PUT: "border-l-amber-500",
-  PATCH: "border-l-violet-500",
-  DELETE: "border-l-rose-500",
-  HEAD: "border-l-slate-500",
-  OPTIONS: "border-l-cyan-500",
+  GET: "border-l-primary/55",
+  POST: "border-l-primary/55",
+  PUSH: "border-l-primary/55",
+  PUT: "border-l-primary/55",
+  PATCH: "border-l-primary/55",
+  DELETE: "border-l-primary/55",
+  HEAD: "border-l-primary/55",
+  OPTIONS: "border-l-primary/55",
 };
 
 export function getHttpMethodBadgeClass(method: string): string {
   const key = method.trim().toUpperCase();
-  return METHOD_BADGE[key] ?? "border-border bg-muted/80 text-foreground";
+  return METHOD_BADGE[key] ?? NEUTRAL_BADGE;
 }
 
 export function getHttpMethodCardAccentClass(method: string): string {

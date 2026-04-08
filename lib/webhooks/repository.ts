@@ -182,3 +182,18 @@ export async function listRequestsForEndpoint(
     .all<WebhookRequestRow>();
   return results ?? [];
 }
+
+/** Deletes a captured request if it belongs to the endpoint. Returns whether a row was removed. */
+export async function deleteRequestForEndpoint(
+  db: D1Database,
+  endpointId: string,
+  requestId: string,
+): Promise<boolean> {
+  const res = await db
+    .prepare(
+      `DELETE FROM webhook_requests WHERE id = ? AND endpoint_id = ?`,
+    )
+    .bind(requestId, endpointId)
+    .run();
+  return (res.meta.changes ?? 0) > 0;
+}

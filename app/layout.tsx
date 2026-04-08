@@ -18,7 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="h-full overflow-hidden antialiased"
+      suppressHydrationWarning
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -27,14 +31,16 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="grid h-dvh grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
         <ThemeProvider>
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
+          <main className="flex h-full min-h-0 flex-col overflow-hidden">
+            {children}
+          </main>
+          <SiteFooter compact />
           <FloatingThemeToggle />
         </ThemeProvider>
       </body>

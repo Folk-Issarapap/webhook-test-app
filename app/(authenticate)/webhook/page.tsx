@@ -8,8 +8,8 @@ export default async function WebhookDashboardPage() {
   const origin = resolveRequestOrigin(h);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10 md:px-6 md:pb-14">
-      <WebhookWorkspace origin={origin} />
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <WebhookWorkspace origin={origin} routeBasePath="/webhook" />
     </div>
   );
 }

@@ -20,7 +20,6 @@ import {
   SEND_TEST_BODY_TEMPLATES,
   SEND_TEST_HEADER_TEMPLATES,
 } from "@/lib/webhooks/send-test-templates";
-import { getHttpMethodBadgeClass } from "@/lib/http-method-styles";
 import { cn } from "@/lib/utils";
 
 import { CopyTextButton } from "./copy-url-button";
@@ -55,7 +54,7 @@ function tryFormatJson(raw: string): string {
 }
 
 type WebhookSendTestProps = {
-  /** Current ingest URL from the selected sidebar endpoint (optional shortcut). */
+  /** Selected endpoint’s webhook URL (optional shortcut to fill the request URL). */
   selectedIngestUrl: string | null;
 };
 
@@ -171,14 +170,14 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
     : "text-muted-foreground";
 
   return (
-    <div className="space-y-8">
-      <div className="ui-surface rounded-xl p-5 md:p-6">
+    <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:min-h-0 lg:grid-cols-2 lg:gap-5 lg:items-stretch">
+      {/* Request (left on lg) */}
+      <div className="bg-muted/20 ring-border/45 flex min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain rounded-2xl p-4 ring-1 [scrollbar-gutter:stable] md:p-5">
         <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-          Paste any webhook or HTTP URL. The request runs from this
-          application&apos;s server so providers without browser CORS still
-          respond. Only <code className="font-mono text-xs">http</code> and{" "}
-          <code className="font-mono text-xs">https</code> are allowed; timeout
-          is 30s.
+          The request runs from this app&apos;s server (helps with providers
+          that block browser CORS).{" "}
+          <code className="font-mono text-xs">http</code> /{" "}
+          <code className="font-mono text-xs">https</code> only, 30s timeout.
         </p>
 
         <div className="space-y-4">
@@ -193,7 +192,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
                 disabled={!selectedIngestUrl}
                 onClick={applySelectedUrl}
               >
-                Use selected endpoint URL
+                Use selected webhook URL
               </Button>
             </div>
             <Input
@@ -211,12 +210,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             <div className="space-y-2">
               <Label>Method</Label>
               <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger
-                  className={cn(
-                    "w-[130px] bg-background font-mono font-semibold",
-                    getHttpMethodBadgeClass(method),
-                  )}
-                >
+                <SelectTrigger className="w-[130px] bg-background font-mono text-sm font-semibold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -306,7 +300,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
             <Textarea
               id="test-headers"
               className={cn(
-                "font-mono text-xs min-h-[100px]",
+                "min-h-[100px] font-mono text-xs",
                 headersMode === "template" && "bg-muted/40 text-muted-foreground",
               )}
               value={headersText}
@@ -384,7 +378,7 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
               <Textarea
                 id="test-body"
                 className={cn(
-                  "font-mono text-xs min-h-[140px]",
+                  "min-h-[140px] font-mono text-xs",
                   bodyMode === "template" && "bg-muted/40 text-muted-foreground",
                 )}
                 value={body}
@@ -413,52 +407,60 @@ export function WebhookSendTest({ selectedIngestUrl }: WebhookSendTestProps) {
         ) : null}
       </div>
 
-      {result ? (
-        <div
-          className="ui-surface rounded-xl p-5 md:p-6"
-          aria-live="polite"
-        >
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="font-heading text-base font-medium tracking-tight">
-              Response
-            </h3>
-            <span className={cn("font-mono text-xs", responseMetaClass)}>
-              {result.durationMs} ms · HTTP {result.status}
-              {result.statusText ? ` ${result.statusText}` : ""}
-            </span>
-          </div>
+      {/* Response (right on lg) */}
+      <div className="bg-muted/20 ring-border/45 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl ring-1">
+        {result ? (
+          <div
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-4 [scrollbar-gutter:stable] md:p-5"
+            aria-live="polite"
+          >
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="font-heading text-base font-medium tracking-tight">
+                Response
+              </h3>
+              <span className={cn("font-mono text-xs", responseMetaClass)}>
+                {result.durationMs} ms · HTTP {result.status}
+                {result.statusText ? ` ${result.statusText}` : ""}
+              </span>
+            </div>
 
-          <div className="space-y-4">
-            <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
-                  Response headers
-                </p>
-                <CopyTextButton text={responseHeadersText} label="Copy" />
+            <div className="space-y-4">
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
+                    Response headers
+                  </p>
+                  <CopyTextButton text={responseHeadersText} label="Copy" />
+                </div>
+                <pre className="ui-code-well max-h-[min(14rem,32vh)] overflow-y-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+                  {responseHeadersText || "—"}
+                </pre>
               </div>
-              <pre className="ui-code-well max-h-[min(20rem,40vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
-                {responseHeadersText || "—"}
-              </pre>
-            </div>
-            <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
-                  Response body
-                </p>
-                <CopyTextButton text={responseBodyDisplay} label="Copy" />
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">
+                    Response body
+                  </p>
+                  <CopyTextButton text={responseBodyDisplay} label="Copy" />
+                </div>
+                <pre className="ui-code-well max-h-[min(22rem,42vh)] overflow-y-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
+                  {responseBodyDisplay || "—"}
+                </pre>
+                {result.truncated ? (
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Response body was truncated for display.
+                  </p>
+                ) : null}
               </div>
-              <pre className="ui-code-well max-h-[min(28rem,50vh)] overflow-auto rounded-xl p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap md:text-xs">
-                {responseBodyDisplay || "—"}
-              </pre>
-              {result.truncated ? (
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Response body was truncated for display.
-                </p>
-              ) : null}
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <div className="text-muted-foreground flex min-h-40 flex-1 items-center justify-center px-6 text-center text-sm leading-relaxed lg:min-h-0">
+            Response status, headers, and body will show here after you send a
+            request.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

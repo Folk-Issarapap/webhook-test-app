@@ -19,7 +19,7 @@ export function FloatingThemeToggle() {
   if (!isClient) {
     return (
       <div
-        className="bg-background/80 pointer-events-none fixed top-4 right-4 z-50 size-10 rounded-full border shadow-md"
+        className="bg-background/60 pointer-events-none fixed top-4 right-4 z-50 size-9 rounded-full border border-border/60"
         aria-hidden
       />
     );
@@ -30,9 +30,9 @@ export function FloatingThemeToggle() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="icon"
-      className="bg-background/80 fixed top-4 right-4 z-50 size-10 rounded-full shadow-md backdrop-blur-sm"
+      className="border-border/60 bg-background/70 fixed top-4 right-4 z-50 size-9 rounded-full border backdrop-blur-sm"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
