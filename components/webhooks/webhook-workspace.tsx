@@ -20,6 +20,7 @@ import { buildIngestUrl } from "@/lib/webhooks/urls";
 import type { WebhookRequestRow } from "@/schemas/webhook";
 
 import { WebhookSendTest } from "./webhook-send-test";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +81,7 @@ function shortRequestId(id: string): string {
 function CaptureStatusPill() {
   return (
     <span
-      className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground/90 bg-muted/50 border border-border-subtle/80"
+      className="shrink-0 rounded px-1.5 py-0.5  text-[10px] tabular-nums text-muted-foreground/90 bg-muted/40 border border-border-subtle/45"
       title="Successfully received and stored"
     >
       200
@@ -115,15 +116,12 @@ function EndpointTabStrip({
   sendTestActive: boolean;
 }) {
   return (
-    <div className="flex items-stretch border-b border-border-subtle bg-background">
-      <div className="flex min-w-0 flex-1 overflow-x-auto">
+    <div className="flex items-stretch border-b border-border-subtle/40 bg-background">
+      <div className="flex min-w-0 flex-1 overflow-x-auto divide-x divide-border-subtle/25">
         {endpoints.map((ep, index) => {
           const active = ep.id === selectedId;
           return (
-            <div
-              key={ep.id}
-              className="group flex shrink-0 items-stretch border-r border-border-subtle/80"
-            >
+            <div key={ep.id} className="group flex shrink-0 items-stretch">
               <button
                 type="button"
                 onClick={() => onSelect(ep.id)}
@@ -137,7 +135,7 @@ function EndpointTabStrip({
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
                   Endpoint {index + 1}
                 </span>
-                <span className="truncate font-mono text-xs text-foreground/90">
+                <span className="truncate  text-xs text-foreground/90">
                   {ep.publicSlug}
                 </span>
                 {active && (
@@ -163,20 +161,36 @@ function EndpointTabStrip({
             </div>
           );
         })}
+        {canAdd ? (
+          <div className="flex shrink-0 items-stretch">
+            <button
+              type="button"
+              disabled={addDisabled}
+              onClick={onAdd}
+              className={cn(
+                "flex items-center justify-center px-3.5 py-2.5 transition-colors",
+                addDisabled
+                  ? "cursor-not-allowed text-muted-foreground/40"
+                  : "text-muted-foreground hover:bg-muted/25 hover:text-foreground",
+              )}
+              title={
+                addDisabled
+                  ? "Cannot add endpoint"
+                  : "Create a new webhook endpoint"
+              }
+            >
+              <Plus className="size-4" />
+            </button>
+          </div>
+        ) : null}
       </div>
-      <div className="flex shrink-0 items-stretch border-l border-border-subtle">
-        <button
+      <div className="flex shrink-0 items-center border-l border-border-subtle/35 pl-2 pr-1.5">
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           disabled={sendTestDisabled}
           onClick={onSendTest}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors",
-            sendTestDisabled
-              ? "cursor-not-allowed text-muted-foreground/40"
-              : sendTestActive
-                ? "bg-muted/25 text-foreground"
-                : "text-muted-foreground hover:bg-muted/20 hover:text-foreground",
-          )}
           title={
             sendTestDisabled
               ? "Select an endpoint to send a test request"
@@ -184,30 +198,15 @@ function EndpointTabStrip({
                 ? "Back to inspect"
                 : "Send a test request to this endpoint"
           }
+          className={cn(
+            "h-8 gap-1.5 font-medium shadow-none",
+            sendTestActive &&
+              "border-primary/35 bg-primary/8 text-foreground hover:bg-primary/12",
+          )}
         >
-          <Send className="size-3.5 shrink-0 opacity-80" />
-          <span className="hidden sm:inline">Send test</span>
-        </button>
-        {canAdd ? (
-          <button
-            type="button"
-            disabled={addDisabled}
-            onClick={onAdd}
-            className={cn(
-              "flex items-center justify-center border-l border-border-subtle px-3.5 transition-colors",
-              addDisabled
-                ? "cursor-not-allowed text-muted-foreground/40"
-                : "text-muted-foreground hover:bg-muted/20 hover:text-foreground",
-            )}
-            title={
-              addDisabled
-                ? "Cannot add endpoint"
-                : "Create a new webhook endpoint"
-            }
-          >
-            <Plus className="size-4" />
-          </button>
-        ) : null}
+          <Send className="size-3.5" />
+          <span className="max-sm:sr-only">Send test</span>
+        </Button>
       </div>
     </div>
   );
@@ -224,7 +223,7 @@ function UrlCard({ url, embedded }: { url: string; embedded?: boolean }) {
           <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Ingest URL
           </p>
-          <code className="block break-all font-mono text-sm text-foreground">
+          <code className="block break-all  text-sm text-foreground">
             {url}
           </code>
         </div>
@@ -267,7 +266,7 @@ function MethodBadge({ method }: { method: string }) {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-surface border border-border-subtle flex items-center justify-center mb-4">
+      <div className="mb-4 flex size-16 items-center justify-center rounded-2xl border border-border-subtle/45 bg-surface/80">
         <Webhook className="size-6 text-muted-foreground" />
       </div>
       <p className="text-sm text-muted-foreground">{message}</p>
@@ -291,7 +290,7 @@ function RequestListItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full border-b border-border-subtle/60 px-3 py-2.5 text-left transition-colors last:border-b-0",
+        "w-full border-b border-border-subtle/30 px-3 py-2.5 text-left transition-colors last:border-b-0",
         isSelected
           ? "bg-muted/30 text-foreground"
           : "text-muted-foreground hover:bg-muted/15",
@@ -300,7 +299,7 @@ function RequestListItem({
       <div className="flex items-center gap-2">
         <MethodBadge method={row.method} />
         <span
-          className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/80"
+          className="min-w-0 flex-1 truncate  text-[11px] text-foreground/80"
           title={row.path}
         >
           {shortRequestId(row.id)}
@@ -308,7 +307,7 @@ function RequestListItem({
         <CaptureStatusPill />
       </div>
       <div className="mt-1 flex items-center justify-between gap-2 pl-0.5">
-        <span className="truncate font-mono text-[10px] text-muted-foreground/70">
+        <span className="truncate  text-[10px] text-muted-foreground/70">
           {format(when, "MMM d, HH:mm:ss")}
         </span>
         <span className="shrink-0 text-[10px] text-muted-foreground/60">
@@ -333,10 +332,10 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-border-subtle/80 bg-background/85 px-4 py-3 backdrop-blur-sm">
+      <div className="shrink-0 border-b border-border-subtle/35 bg-background/85 px-4 py-3 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-2">
           <MethodBadge method={row.method} />
-          <span className="break-all font-mono text-xs text-muted-foreground">
+          <span className="break-all  text-xs text-muted-foreground">
             {row.path}
           </span>
         </div>
@@ -368,7 +367,7 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
               {copiedHeaders ? "Copied" : "Copy"}
             </button>
           </div>
-          <div className="space-y-2 font-mono text-sm">
+          <div className="space-y-2  text-sm">
             {Object.keys(headersObj).length > 0 ? (
               Object.entries(headersObj).map(([key, value]) => (
                 <div key={key} className="flex gap-2">
@@ -377,7 +376,7 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
                 </div>
               ))
             ) : (
-              <pre className="font-mono text-sm text-muted-foreground whitespace-pre-wrap break-all">
+              <pre className=" text-sm text-muted-foreground whitespace-pre-wrap break-all">
                 {row.headers}
               </pre>
             )}
@@ -404,11 +403,11 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
               {copiedBody ? "Copied" : "Copy"}
             </button>
           </div>
-          <div className="space-y-2 font-mono text-sm max-h-[400px] overflow-auto">
+          <div className="space-y-2  text-sm max-h-[400px] overflow-auto">
             {bodyObj ? (
               <SimpleJsonDisplay data={bodyObj} />
             ) : (
-              <pre className="font-mono text-sm text-muted-foreground whitespace-pre-wrap break-all">
+              <pre className=" text-sm text-muted-foreground whitespace-pre-wrap break-all">
                 {bodyText}
               </pre>
             )}
@@ -463,20 +462,20 @@ function IncomingRequests({ endpointId }: { endpointId: string }) {
 
   if (requests.length === 0) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center rounded-xl border border-dashed border-border-subtle bg-surface/30">
+      <div className="flex min-h-[420px] items-center justify-center rounded-xl border border-dashed border-border-subtle/50 bg-surface/20">
         <EmptyState message="No requests captured yet. Send a webhook to get started." />
       </div>
     );
   }
 
   return (
-    <div className="grid min-h-[min(70vh,640px)] grid-cols-1 overflow-hidden rounded-xl border border-border-subtle bg-elevated lg:grid-cols-[minmax(220px,280px)_1fr]">
-      <aside className="flex max-h-[min(70vh,640px)] flex-col border-b border-border-subtle lg:border-b-0 lg:border-r lg:border-border-subtle">
-        <div className="flex shrink-0 items-center justify-between border-b border-border-subtle/80 px-3 py-2.5">
+    <div className="grid min-h-[min(70vh,640px)] grid-cols-1 overflow-hidden rounded-xl border border-border-subtle/45 bg-elevated/80 shadow-sm shadow-black/3 lg:grid-cols-[minmax(220px,280px)_1fr]">
+      <aside className="flex max-h-[min(70vh,640px)] flex-col border-b border-border-subtle/35 lg:border-b-0 lg:border-r lg:border-border-subtle/35">
+        <div className="flex shrink-0 items-center justify-between border-b border-border-subtle/30 px-3 py-2.5">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Request history
           </span>
-          <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+          <span className=" text-[10px] text-muted-foreground tabular-nums">
             {requests.length}
           </span>
         </div>
@@ -594,14 +593,14 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
     <div className="mx-auto min-h-full w-5xl px-4 py-8 md:py-12">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className=" text-2xl font-semibold tracking-tight text-foreground">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
             Webhook Workspace
           </h1>
           <p className="text-sm text-muted-foreground">
             Inspect and test HTTP webhooks
           </p>
         </div>
-        <span className="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-muted-foreground">
+        <span className="rounded-full border border-border-subtle/50 bg-surface/80 px-2.5 py-1 text-xs text-muted-foreground">
           {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE} endpoints
         </span>
       </div>
@@ -612,7 +611,7 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border-subtle bg-elevated/20">
+      <div className="overflow-hidden rounded-xl border border-border-subtle/45 bg-elevated/15 shadow-sm shadow-black/3">
         <EndpointTabStrip
           endpoints={endpoints}
           selectedId={selectedId}
@@ -646,12 +645,12 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
           <div className="bg-background">
             {activeTab === "inspect" && (
               <div className="flex flex-col">
-                <div className="sticky top-0 z-10 border-b border-border-subtle bg-background/95 px-4 py-3 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
+                <div className="sticky top-0 z-10 border-b border-border-subtle/35 bg-background/95 px-4 py-3 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
                   <UrlCard url={ingestUrl} embedded />
                 </div>
                 <div className="p-4">
                   {loadError ? (
-                    <div className="rounded-xl border border-dashed border-border-subtle bg-surface/50 py-16 text-center">
+                    <div className="rounded-xl border border-dashed border-border-subtle/50 bg-surface/40 py-16 text-center">
                       <p className="text-sm text-muted-foreground">
                         Connect database to view requests
                       </p>
@@ -664,13 +663,13 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
             )}
 
             {activeTab === "send" && (
-              <div className="border-t border-border-subtle/60 p-4 md:p-6">
+              <div className="border-t border-border-subtle/35 p-4 md:p-6">
                 <WebhookSendTest selectedIngestUrl={ingestUrl || null} />
               </div>
             )}
           </div>
         ) : (
-          <div className="border-t border-border-subtle p-12">
+          <div className="border-t border-border-subtle/35 p-12">
             <EmptyState message="Select an endpoint to get started" />
           </div>
         )}
