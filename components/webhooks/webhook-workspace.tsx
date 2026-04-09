@@ -1,16 +1,8 @@
 "use client";
 
+import { format } from "date-fns";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Copy,
-  Check,
-  Eye,
-  Link2,
-  Plus,
-  Send,
-  Trash2,
-  Webhook,
-} from "lucide-react";
+import { Copy, Check, Plus, Send, Trash2, Webhook } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -29,6 +21,7 @@ import type { WebhookRequestRow } from "@/schemas/webhook";
 
 import { WebhookSendTest } from "./webhook-send-test";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 // Utility: Parse headers
 function tryParseHeaders(raw: string): Record<string, string> {
@@ -76,100 +69,178 @@ function useCopy(text: string) {
   return { copied, copy };
 }
 
-// Endpoint Card
-function EndpointCard({
-  endpoint,
-  index,
-  isActive,
+function shortRequestId(id: string): string {
+  const trimmed = id.replace(/^req_?/i, "");
+  return (
+    (trimmed.length > 10 ? trimmed.slice(0, 8) : trimmed) || id.slice(0, 8)
+  );
+}
+
+/** Catcher accepts and stores the request (no per-row HTTP status in DB yet). */
+function CaptureStatusPill() {
+  return (
+    <span
+      className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground/90 bg-muted/50 border border-border-subtle/80"
+      title="Successfully received and stored"
+    >
+      200
+    </span>
+  );
+}
+
+// Horizontal endpoint tabs (Postman-style)
+function EndpointTabStrip({
+  endpoints,
+  selectedId,
   onSelect,
-  onDelete,
+  canAdd,
   canDelete,
+  onAdd,
+  onDelete,
+  addDisabled,
+  onSendTest,
+  sendTestDisabled,
+  sendTestActive,
 }: {
-  endpoint: WorkspaceEndpointDto;
-  index: number;
-  isActive: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
+  endpoints: WorkspaceEndpointDto[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  canAdd: boolean;
   canDelete: boolean;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+  addDisabled: boolean;
+  onSendTest: () => void;
+  sendTestDisabled: boolean;
+  sendTestActive: boolean;
 }) {
   return (
-    <div
-      onClick={onSelect}
-      className={`group relative cursor-pointer rounded-2xl border p-4 transition-all duration-300 ${
-        isActive
-          ? "border-primary/50 bg-primary-subtle/20 shadow-sm"
-          : "border-border-subtle hover:border-primary/30 hover:shadow-sm"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {/*  <Webhook
-              className={`size-3.5 ${isActive ? "text-primary" : "text-muted-foreground"}`}
-            /> */}
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Endpoint {index + 1}
-            </span>
-          </div>
-          <p className="font-mono text-xs text-foreground break-all leading-relaxed">
-            {endpoint.publicSlug}
-          </p>
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (canDelete) onDelete();
-          }}
-          disabled={!canDelete}
-          className={`shrink-0 p-1.5 rounded-lg transition-colors ${
-            canDelete
-              ? "text-muted-foreground hover:text-destructive hover:bg-destructive-subtle/50 opacity-0 group-hover:opacity-100"
-              : "text-muted-foreground/30 cursor-not-allowed"
-          }`}
-          title={canDelete ? "Delete endpoint" : "Cannot delete last endpoint"}
-        >
-          <Trash2 className="size-3.5" />
-        </button>
+    <div className="flex items-stretch border-b border-border-subtle bg-background">
+      <div className="flex min-w-0 flex-1 overflow-x-auto">
+        {endpoints.map((ep, index) => {
+          const active = ep.id === selectedId;
+          return (
+            <div
+              key={ep.id}
+              className="group flex shrink-0 items-stretch border-r border-border-subtle/80"
+            >
+              <button
+                type="button"
+                onClick={() => onSelect(ep.id)}
+                className={cn(
+                  "relative flex max-w-[min(100vw,14rem)] flex-col items-start justify-center gap-0.5 px-4 py-2.5 text-left transition-colors",
+                  active
+                    ? "bg-muted/25 text-foreground"
+                    : "text-muted-foreground hover:bg-muted/15 hover:text-foreground",
+                )}
+              >
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
+                  Endpoint {index + 1}
+                </span>
+                <span className="truncate font-mono text-xs text-foreground/90">
+                  {ep.publicSlug}
+                </span>
+                {active && (
+                  <span
+                    className="absolute bottom-0 left-3 right-3 h-px bg-primary/40"
+                    aria-hidden
+                  />
+                )}
+              </button>
+              {canDelete ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(ep.id);
+                  }}
+                  className="flex items-center px-2 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive-subtle/40 hover:text-destructive group-hover:opacity-100"
+                  title="Remove endpoint"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
-      {isActive && (
-        <div className="absolute -left-px top-1/2 -translate-y-1/2 w-0.5 h-8 bg-primary rounded-full" />
-      )}
+      <div className="flex shrink-0 items-stretch border-l border-border-subtle">
+        <button
+          type="button"
+          disabled={sendTestDisabled}
+          onClick={onSendTest}
+          className={cn(
+            "flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors",
+            sendTestDisabled
+              ? "cursor-not-allowed text-muted-foreground/40"
+              : sendTestActive
+                ? "bg-muted/25 text-foreground"
+                : "text-muted-foreground hover:bg-muted/20 hover:text-foreground",
+          )}
+          title={
+            sendTestDisabled
+              ? "Select an endpoint to send a test request"
+              : sendTestActive
+                ? "Back to inspect"
+                : "Send a test request to this endpoint"
+          }
+        >
+          <Send className="size-3.5 shrink-0 opacity-80" />
+          <span className="hidden sm:inline">Send test</span>
+        </button>
+        {canAdd ? (
+          <button
+            type="button"
+            disabled={addDisabled}
+            onClick={onAdd}
+            className={cn(
+              "flex items-center justify-center border-l border-border-subtle px-3.5 transition-colors",
+              addDisabled
+                ? "cursor-not-allowed text-muted-foreground/40"
+                : "text-muted-foreground hover:bg-muted/20 hover:text-foreground",
+            )}
+            title={
+              addDisabled
+                ? "Cannot add endpoint"
+                : "Create a new webhook endpoint"
+            }
+          >
+            <Plus className="size-4" />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-// Modern URL Card - Single prominent display
-function UrlCard({ url }: { url: string }) {
+// Ingest URL — full width; omit bottom rule when nested under a bordered parent
+function UrlCard({ url, embedded }: { url: string; embedded?: boolean }) {
   const { copied, copy } = useCopy(url);
 
   return (
-    <div className="relative group">
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="relative flex items-center gap-3 py-2 rounded-2xl hover:border-primary/30 transition-all">
+    <div className="group relative">
+      <div className="relative flex items-center gap-3 py-1">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-            Webhook URL
+          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Ingest URL
           </p>
-          <code className="block font-mono text-sm text-foreground break-all">
+          <code className="block break-all font-mono text-sm text-foreground">
             {url}
           </code>
         </div>
         <button
+          type="button"
           onClick={copy}
-          className="teshrink-0 flex items-center gap-2 py-2 rounded-xl text-muted-foreground transition-colors text-sm font-medium"
+          className="shrink-0 flex items-center gap-2 rounded-xl py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           {copied ? (
-            <>
-              <Check className="size-4 text-success" />
-            </>
+            <Check className="size-4 text-success" />
           ) : (
-            <>
-              <Copy className="size-4" />
-            </>
+            <Copy className="size-4" />
           )}
         </button>
       </div>
-      <Separator className="h-px mt-4 bg-muted" />
+      {!embedded && <Separator className="mt-4 h-px bg-muted" />}
     </div>
   );
 }
@@ -204,7 +275,7 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-// Simple Request List Item for left panel
+// Request row in history sidebar
 function RequestListItem({
   row,
   isSelected,
@@ -214,22 +285,34 @@ function RequestListItem({
   isSelected: boolean;
   onClick: () => void;
 }) {
+  const when = row.created_at * 1000;
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all ${
+      className={cn(
+        "w-full border-b border-border-subtle/60 px-3 py-2.5 text-left transition-colors last:border-b-0",
         isSelected
-          ? "bg-primary/5 text-foreground"
-          : "text-muted-foreground hover:bg-muted/30"
-      }`}
+          ? "bg-muted/30 text-foreground"
+          : "text-muted-foreground hover:bg-muted/15",
+      )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <MethodBadge method={row.method} />
-        <span className="font-mono text-xs truncate flex-1" title={row.path}>
-          {row.path}
+        <span
+          className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/80"
+          title={row.path}
+        >
+          {shortRequestId(row.id)}
         </span>
-        <span className="text-xs opacity-60 whitespace-nowrap">
-          {formatDistanceToNow(row.created_at * 1000, { addSuffix: true })}
+        <CaptureStatusPill />
+      </div>
+      <div className="mt-1 flex items-center justify-between gap-2 pl-0.5">
+        <span className="truncate font-mono text-[10px] text-muted-foreground/70">
+          {format(when, "MMM d, HH:mm:ss")}
+        </span>
+        <span className="shrink-0 text-[10px] text-muted-foreground/60">
+          {formatDistanceToNow(when, { addSuffix: true })}
         </span>
       </div>
     </button>
@@ -249,30 +332,27 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
   const { copied: copiedBody, copy: copyBody } = useCopy(bodyText);
 
   return (
-    <div className="h-full overflow-auto">
-      {/*       <div className="p-4 border-b border-border-subtle bg-surface/30 sticky top-0 z-10 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 border-b border-border-subtle/80 bg-background/85 px-4 py-3 backdrop-blur-sm">
+        <div className="flex flex-wrap items-center gap-2">
           <MethodBadge method={row.method} />
-          <div className="mt-2 font-mono text-xs text-muted-foreground break-all">
+          <span className="break-all font-mono text-xs text-muted-foreground">
             {row.path}
-          </div>
+          </span>
         </div>
-        <div className="mt-2 font-mono text-xs text-muted-foreground break-all">
-          {row.path}
-        </div>
-        {row.source_note && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Source: {row.source_note}
-          </div>
-        )}
-      </div> */}
+        {row.source_note ? (
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            {row.source_note}
+          </p>
+        ) : null}
+      </div>
 
-      <div className="p-4 pt-0 space-y-6">
+      <div className="min-h-0 flex-1 space-y-6 overflow-auto p-4">
         {/* Headers Panel */}
-        <div className="">
-          <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <span className=" text-sm font-medium tracking-tight text-foreground">
                 Headers
               </span>
             </div>
@@ -306,9 +386,9 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
 
         {/* Body Panel */}
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <span className=" text-sm font-medium tracking-tight text-foreground">
                 Body
               </span>
             </div>
@@ -383,23 +463,24 @@ function IncomingRequests({ endpointId }: { endpointId: string }) {
 
   if (requests.length === 0) {
     return (
-      <EmptyState message="No requests captured yet. Send a webhook to get started." />
+      <div className="flex min-h-[420px] items-center justify-center rounded-xl border border-dashed border-border-subtle bg-surface/30">
+        <EmptyState message="No requests captured yet. Send a webhook to get started." />
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
-      {/* Left: Request List */}
-      <div className="lg:col-span-1 overflow-auto max-h-[600px]">
-        <div className="flex items-center justify-between mb-3 py-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Recent Requests
+    <div className="grid min-h-[min(70vh,640px)] grid-cols-1 overflow-hidden rounded-xl border border-border-subtle bg-elevated lg:grid-cols-[minmax(220px,280px)_1fr]">
+      <aside className="flex max-h-[min(70vh,640px)] flex-col border-b border-border-subtle lg:border-b-0 lg:border-r lg:border-border-subtle">
+        <div className="flex shrink-0 items-center justify-between border-b border-border-subtle/80 px-3 py-2.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Request history
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
             {requests.length}
           </span>
         </div>
-        <div className="space-y-1">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {requests.map((row) => (
             <RequestListItem
               key={row.id}
@@ -409,78 +490,17 @@ function IncomingRequests({ endpointId }: { endpointId: string }) {
             />
           ))}
         </div>
-      </div>
+      </aside>
 
-      {/* Right: Request Detail */}
-      <div className="lg:col-span-2">
+      <section className="flex min-h-0 min-w-0 flex-col bg-background/40">
         {selectedRequest ? (
           <RequestDetail row={selectedRequest} />
         ) : (
-          <div className="h-full flex items-center justify-center text-muted-foreground">
+          <div className="flex flex-1 items-center justify-center text-muted-foreground">
             <span className="text-sm">Select a request to view details</span>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-// Minimal Tab Bar - Underline style
-function MinimalTabs({
-  activeTab,
-  onChange,
-}: {
-  activeTab: "inspect" | "send";
-  onChange: (tab: "inspect" | "send") => void;
-}) {
-  return (
-    <div className="flex items-center gap-6 border-b border-border-subtle">
-      <button
-        onClick={() => onChange("inspect")}
-        className={`relative pb-3 text-sm font-medium transition-colors ${
-          activeTab === "inspect"
-            ? "text-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        <span className="flex items-center gap-2">
-          <Eye className="size-4" />
-          Inspect
-        </span>
-        {activeTab === "inspect" && (
-          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-        )}
-      </button>
-      <button
-        onClick={() => onChange("send")}
-        className={`relative pb-3 text-sm font-medium transition-colors ${
-          activeTab === "send"
-            ? "text-foreground"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        <span className="flex items-center gap-2">
-          <Send className="size-4" />
-          Send Test
-        </span>
-        {activeTab === "send" && (
-          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-        )}
-      </button>
-    </div>
-  );
-}
-
-// Section Header
-function SectionHeader({ title, badge }: { title: string; badge?: string }) {
-  return (
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
-      {badge && (
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground bg-surface px-2.5 py-1 rounded-full border border-border-subtle">
-          {badge}
-        </span>
-      )}
+      </section>
     </div>
   );
 }
@@ -571,114 +591,90 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
   }
 
   return (
-    <div className="min-h-full w-5xl mx-auto px-4 py-8 md:py-12">
-      {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-3">
-          {/*  <div className="w-10 h-10 rounded-xl bg-primary-subtle flex items-center justify-center">
-            <Webhook className="size-5 text-primary" />
-          </div> */}
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Webhook Workspace
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Inspect and test HTTP webhooks
-            </p>
-          </div>
+    <div className="mx-auto min-h-full w-5xl px-4 py-8 md:py-12">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className=" text-2xl font-semibold tracking-tight text-foreground">
+            Webhook Workspace
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Inspect and test HTTP webhooks
+          </p>
         </div>
+        <span className="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-muted-foreground">
+          {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE} endpoints
+        </span>
       </div>
 
-      {/* Error */}
       {loadError && (
         <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive-subtle/50 px-4 py-3 text-sm text-destructive">
           {loadError}
         </div>
       )}
 
-      {/* Endpoints Grid */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold tracking-tight">
-            Your Endpoints
-          </h2>
-          <span className="text-xs text-muted-foreground bg-surface px-2 py-1 rounded-full border border-border-subtle">
-            {endpoints.length}/{MAX_ENDPOINTS_PER_WORKSPACE}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {endpoints.map((ep, index) => (
-            <EndpointCard
-              key={ep.id}
-              endpoint={ep}
-              index={index}
-              isActive={ep.id === selectedId}
-              onSelect={() => setSelectedId(ep.id)}
-              onDelete={async () => {
-                const r = await removeEndpointAction(ep.id);
-                if (r.success) await refresh();
-              }}
-              canDelete={canDelete}
-            />
-          ))}
-          {canAdd && !loadError && (
-            <button
-              onClick={async () => {
-                const r = await createEndpointAction();
-                if (r.success) {
-                  setEndpoints((prev) => [...prev, r.endpoint]);
-                  setSelectedId(r.endpoint.id);
-                }
-              }}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-4 transition-all border-border-subtle hover:border-primary/30 hover:bg-primary-subtle/10 cursor-pointer"
-            >
-              <Plus className="size-5" />
-              <span className="text-xs font-medium">Add endpoint</span>
-            </button>
-          )}
-        </div>
-      </div>
+      <div className="overflow-hidden rounded-xl border border-border-subtle bg-elevated/20">
+        <EndpointTabStrip
+          endpoints={endpoints}
+          selectedId={selectedId}
+          onSelect={(id) => {
+            setSelectedId(id);
+            setActiveTab("inspect");
+          }}
+          canAdd={canAdd}
+          canDelete={canDelete}
+          addDisabled={!!loadError}
+          onAdd={async () => {
+            const r = await createEndpointAction();
+            if (r.success) {
+              setEndpoints((prev) => [...prev, r.endpoint]);
+              setSelectedId(r.endpoint.id);
+              setActiveTab("inspect");
+            }
+          }}
+          onDelete={async (id) => {
+            const r = await removeEndpointAction(id);
+            if (r.success) await refresh();
+          }}
+          onSendTest={() =>
+            setActiveTab((t) => (t === "send" ? "inspect" : "send"))
+          }
+          sendTestDisabled={!selected}
+          sendTestActive={activeTab === "send"}
+        />
 
-      {/* Main Content */}
-      {selected ? (
-        <div className="space-y-6">
-          {/* Minimal Tab Navigation */}
-          <MinimalTabs activeTab={activeTab} onChange={setActiveTab} />
-
-          {/* Inspect Tab */}
-          {activeTab === "inspect" && (
-            <div className="space-y-6">
-              {/* Single URL Card */}
-              <UrlCard url={ingestUrl} />
-
-              {/* Requests Section */}
-              <div>
-                {/*  <SectionHeader
-                  title="Incoming Requests"
-                  badge={loadError ? "Offline" : "Live"}
-                /> */}
-
-                {loadError ? (
-                  <div className="rounded-2xl border border-dashed border-border-subtle bg-surface/50 py-16 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Connect database to view requests
-                    </p>
-                  </div>
-                ) : (
-                  <IncomingRequests endpointId={selected.id} />
-                )}
+        {selected ? (
+          <div className="bg-background">
+            {activeTab === "inspect" && (
+              <div className="flex flex-col">
+                <div className="sticky top-0 z-10 border-b border-border-subtle bg-background/95 px-4 py-3 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
+                  <UrlCard url={ingestUrl} embedded />
+                </div>
+                <div className="p-4">
+                  {loadError ? (
+                    <div className="rounded-xl border border-dashed border-border-subtle bg-surface/50 py-16 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Connect database to view requests
+                      </p>
+                    </div>
+                  ) : (
+                    <IncomingRequests endpointId={selected.id} />
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Send Test Tab */}
-          {activeTab === "send" && (
-            <WebhookSendTest selectedIngestUrl={ingestUrl || null} />
-          )}
-        </div>
-      ) : (
-        <EmptyState message="Select an endpoint to get started" />
-      )}
+            {activeTab === "send" && (
+              <div className="border-t border-border-subtle/60 p-4 md:p-6">
+                <WebhookSendTest selectedIngestUrl={ingestUrl || null} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="border-t border-border-subtle p-12">
+            <EmptyState message="Select an endpoint to get started" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
