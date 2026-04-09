@@ -710,7 +710,7 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
             )}
 
             {activeTab === "send" && (
-              <div className="border-t border-border-subtle/35 p-4 md:p-6">
+              <div className="border-t border-border-subtle/35 py-4">
                 <WebhookSendTest selectedIngestUrl={ingestUrl || null} />
               </div>
             )}

@@ -470,7 +470,7 @@ export function WebhookSendTest({
       {/* URL Bar */}
       <div className="flex flex-wrap items-end gap-3 py-4">
         <Select value={method} onValueChange={setMethod}>
-          <SelectTrigger className="w-[100px] font-medium">
+          <SelectTrigger className="w-[100px] font-medium rounded-md">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -492,7 +492,7 @@ export function WebhookSendTest({
         <Button
           onClick={send}
           disabled={loading || !url.trim()}
-          className="gap-2 bg-primary text-primary-foreground hover:bg-primary-hover"
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary-hover rounded-md"
         >
           {loading ? (
             <Loader2 className="size-4 animate-spin" />
