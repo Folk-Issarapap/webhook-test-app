@@ -220,7 +220,7 @@ function EndpointTabStrip({
             <Send className="size-3.5" />
           )}
           <span className="max-sm:sr-only">
-            {sendTestActive ? "Back" : "Send test"}
+            {sendTestActive ? "Back" : "Send Test"}
           </span>
         </Button>
       </div>
