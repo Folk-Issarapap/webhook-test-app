@@ -290,16 +290,22 @@ function RequestListItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full border-b border-border-subtle/30 px-3 py-2.5 text-left transition-colors last:border-b-0",
+        "group w-full border-b border-border-subtle/30 py-2.5 pl-3 pr-3 text-left transition-[background-color,color] duration-150 last:border-b-0",
+        "border-l-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/12 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isSelected
-          ? "bg-muted/30 text-foreground"
-          : "text-muted-foreground hover:bg-muted/15",
+          ? "border-l-foreground/35 bg-black/5.5 text-foreground dark:border-l-foreground/45 dark:bg-white/8"
+          : "border-l-transparent text-muted-foreground hover:bg-black/2.5 hover:text-foreground dark:hover:bg-white/6",
       )}
     >
       <div className="flex items-center gap-2">
         <MethodBadge method={row.method} />
         <span
-          className="min-w-0 flex-1 truncate  text-[11px] text-foreground/80"
+          className={cn(
+            "min-w-0 flex-1 truncate  text-[11px]",
+            isSelected
+              ? "text-foreground"
+              : "text-foreground/90 group-hover:text-foreground",
+          )}
           title={row.path}
         >
           {shortRequestId(row.id)}
@@ -307,10 +313,20 @@ function RequestListItem({
         <CaptureStatusPill />
       </div>
       <div className="mt-1 flex items-center justify-between gap-2 pl-0.5">
-        <span className="truncate  text-[10px] text-muted-foreground/70">
+        <span
+          className={cn(
+            "truncate  text-[10px] tabular-nums text-muted-foreground",
+            !isSelected && "group-hover:text-foreground/65",
+          )}
+        >
           {format(when, "MMM d, HH:mm:ss")}
         </span>
-        <span className="shrink-0 text-[10px] text-muted-foreground/60">
+        <span
+          className={cn(
+            "shrink-0 text-[10px] text-muted-foreground",
+            !isSelected && "group-hover:text-foreground/58",
+          )}
+        >
           {formatDistanceToNow(when, { addSuffix: true })}
         </span>
       </div>
