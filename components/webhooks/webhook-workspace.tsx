@@ -593,7 +593,7 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
     <div className="mx-auto min-h-full w-5xl px-4 py-8 md:py-12">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Webhook Workspace
           </h1>
           <p className="text-sm text-muted-foreground">
