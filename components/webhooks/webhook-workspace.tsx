@@ -208,8 +208,7 @@ function EndpointTabStrip({
           }
           className={cn(
             "h-8 gap-1.5 font-medium shadow-none",
-            sendTestActive &&
-              "border-primary/35 bg-primary/8 text-foreground hover:bg-primary/12",
+            sendTestActive && "text-foreground hover:bg-primary/12",
           )}
         >
           {sendTestActive ? (
