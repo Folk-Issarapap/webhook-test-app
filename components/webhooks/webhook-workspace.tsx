@@ -2,7 +2,15 @@
 
 import { format } from "date-fns";
 import { formatDistanceToNow } from "date-fns";
-import { Copy, Check, Plus, Send, Trash2, Webhook } from "lucide-react";
+import {
+  ArrowLeft,
+  Copy,
+  Check,
+  Plus,
+  Send,
+  Trash2,
+  Webhook,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -204,8 +212,14 @@ function EndpointTabStrip({
               "border-primary/35 bg-primary/8 text-foreground hover:bg-primary/12",
           )}
         >
-          <Send className="size-3.5" />
-          <span className="max-sm:sr-only">Send test</span>
+          {sendTestActive ? (
+            <ArrowLeft className="size-3.5" />
+          ) : (
+            <Send className="size-3.5" />
+          )}
+          <span className="max-sm:sr-only">
+            {sendTestActive ? "Back" : "Send test"}
+          </span>
         </Button>
       </div>
     </div>
