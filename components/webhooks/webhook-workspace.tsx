@@ -2,7 +2,16 @@
 
 import { format } from "date-fns";
 import { formatDistanceToNow } from "date-fns";
-import { Copy, Check, Plus, Send, Trash2, Webhook } from "lucide-react";
+import {
+  Copy,
+  Check,
+  Plus,
+  Send,
+  X,
+  Webhook,
+  Trash2,
+  ArrowLeft,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -121,7 +130,10 @@ function EndpointTabStrip({
         {endpoints.map((ep, index) => {
           const active = ep.id === selectedId;
           return (
-            <div key={ep.id} className="group flex shrink-0 items-stretch">
+            <div
+              key={ep.id}
+              className="group relative flex shrink-0 items-stretch"
+            >
               <button
                 type="button"
                 onClick={() => onSelect(ep.id)}
@@ -135,7 +147,7 @@ function EndpointTabStrip({
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
                   Endpoint {index + 1}
                 </span>
-                <span className="truncate  text-xs text-foreground/90">
+                <span className="truncate  text-[12px] text-foreground/90">
                   {ep.publicSlug}
                 </span>
                 {active && (
@@ -155,7 +167,7 @@ function EndpointTabStrip({
                   className="flex items-center px-2 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive-subtle/40 hover:text-destructive group-hover:opacity-100"
                   title="Remove endpoint"
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-3" />
                 </button>
               ) : null}
             </div>
@@ -274,6 +286,20 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
+// Method border colors for left accent
+function methodBorderColor(method: string): string {
+  const colors: Record<string, string> = {
+    GET: "border-l-emerald-600",
+    POST: "border-l-indigo-600",
+    PUT: "border-l-amber-600",
+    PATCH: "border-l-orange-600",
+    DELETE: "border-l-rose-600",
+    HEAD: "border-l-slate-500",
+    OPTIONS: "border-l-slate-500",
+  };
+  return colors[method] || "border-l-muted-foreground";
+}
+
 // Request row in history sidebar
 function RequestListItem({
   row,
@@ -285,6 +311,7 @@ function RequestListItem({
   onClick: () => void;
 }) {
   const when = row.created_at * 1000;
+  const methodColor = methodBorderColor(row.method);
   return (
     <button
       type="button"
@@ -293,7 +320,7 @@ function RequestListItem({
         "group w-full border-b border-border-subtle/30 py-2.5 pl-3 pr-3 text-left transition-[background-color,color] duration-150 last:border-b-0",
         "border-l-[3px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/12 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isSelected
-          ? "border-l-foreground/35 bg-black/5.5 text-foreground dark:border-l-foreground/45 dark:bg-white/8"
+          ? `${methodColor} bg-black/5.5 text-foreground dark:bg-white/8`
           : "border-l-transparent text-muted-foreground hover:bg-black/2.5 hover:text-foreground dark:hover:bg-white/6",
       )}
     >
@@ -348,7 +375,7 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-border-subtle/35 bg-background/85 px-4 py-3 backdrop-blur-sm">
+      <div className="shrink-0 bg-background/85 px-4 py-3 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-2">
           <MethodBadge method={row.method} />
           <span className="break-all  text-xs text-muted-foreground">
@@ -367,7 +394,7 @@ function RequestDetail({ row }: { row: WebhookRequestRow }) {
         <div>
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center">
-              <span className=" text-sm font-medium tracking-tight text-foreground">
+              <span className="text-sm font-medium tracking-tight text-foreground">
                 Headers
               </span>
             </div>
@@ -478,21 +505,21 @@ function IncomingRequests({ endpointId }: { endpointId: string }) {
 
   if (requests.length === 0) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center rounded-xl border border-dashed border-border-subtle/50 bg-surface/20">
+      <div className="flex min-h-[420px] items-center justify-center">
         <EmptyState message="No requests captured yet. Send a webhook to get started." />
       </div>
     );
   }
 
   return (
-    <div className="grid min-h-[min(70vh,640px)] grid-cols-1 overflow-hidden rounded-xl border border-border-subtle/45 bg-elevated/80 shadow-sm shadow-black/3 lg:grid-cols-[minmax(220px,280px)_1fr]">
+    <div className="grid min-h-[min(70vh,640px)] grid-cols-1 overflow-hidden lg:grid-cols-[minmax(220px,280px)_1fr]">
       <aside className="flex max-h-[min(70vh,640px)] flex-col border-b border-border-subtle/35 lg:border-b-0 lg:border-r lg:border-border-subtle/35">
-        <div className="flex shrink-0 items-center justify-between border-b border-border-subtle/30 px-3 py-2.5">
+        <div className="flex shrink-0 items-center space-x-2 border-b border-border-subtle/30 py-2.5">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Request history
           </span>
           <span className=" text-[10px] text-muted-foreground tabular-nums">
-            {requests.length}
+            ({requests.length})
           </span>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -627,7 +654,7 @@ export function WebhookWorkspace({ origin }: { origin: string }) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border-subtle/45 bg-elevated/15 shadow-sm shadow-black/3">
+      <div className="">
         <EndpointTabStrip
           endpoints={endpoints}
           selectedId={selectedId}
